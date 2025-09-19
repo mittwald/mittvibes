@@ -1,4 +1,10 @@
-import { Button, Heading, Text, LayoutCard, Content } from "@mittwald/flow-remote-react-components";
+import {
+	Button,
+	Heading,
+	Text,
+	LayoutCard,
+	Content,
+} from "@mittwald/flow-remote-react-components";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { getHelloWorld } from "~/server/functions/getHelloWorld";
@@ -36,22 +42,21 @@ function RouteComponent() {
 
 			{helloData && (
 				<Content>
-					<Text style={{ fontWeight: "bold" }}>
-						Server Response:
-					</Text>
-					<pre style={{
-						background: "#f5f5f5",
-						padding: "1rem",
-						borderRadius: "4px",
-						fontFamily: "monospace",
-						fontSize: "0.9rem",
-						overflow: "auto"
-					}}>
+					<Text style={{ fontWeight: "bold" }}>Server Response:</Text>
+					<pre
+						style={{
+							background: "#f5f5f5",
+							padding: "1rem",
+							borderRadius: "4px",
+							fontFamily: "monospace",
+							fontSize: "0.9rem",
+							overflow: "auto",
+						}}
+					>
 						{JSON.stringify(helloData, null, 2)}
 					</pre>
 				</Content>
 			)}
-
 
 			<Button onPress={() => refetch()}>Refresh Data</Button>
 		</Content>
