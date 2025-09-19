@@ -1,0 +1,68 @@
+{
+	"name": "my-mittwald-extension",
+	"private": true,
+	"sideEffects": false,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "pnpm db:generate && vite build && tsc --noEmit",
+		"start": "vite start",
+		"check": "pnpm biome check .",
+		"test": "vitest run",
+		"test:watch": "vitest"
+		"db:generate": "prisma generate",
+		"db:format": "prisma format",
+		"db:migrate:dev": "prisma migrate dev",
+		"db:migrate:deploy": "prisma migrate deploy",
+		"db:push": "prisma db push",
+		"db:studio": "prisma studio",
+		"db:reset": "pnpm db:push --force-reset",
+		"format": "pnpm biome format",
+		"format:fix": "pnpm biome format --fix",
+		"lint": "pnpm biome lint",
+		"lint:fix": "pnpm biome lint --fix",
+	},
+	"engines": {
+		"node": "v20.11.1"
+	},
+	"packageManager": "pnpm@10.4.1",
+	"dependencies": {
+		"@mittwald/api-client": "4.175.0",
+		"@mittwald/ext-bridge": "0.2.0-alpha.325",
+		"@mittwald/flow-remote-react-components": "0.2.0-alpha.294",
+		"@prisma/client": "6.10.1",
+		"@tanstack/react-query": "^5.66.0",
+		"@tanstack/react-query-devtools": "^5.66.0",
+		"@tanstack/react-router": "^1.121.34",
+		"@tanstack/react-router-devtools": "^1.121.34",
+		"@tanstack/react-router-with-query": "^1.121.34",
+		"@tanstack/react-start": "^1.121.35",
+		"@weissaufschwarz/mitthooks": "^0.2.2",
+		"envalid": "^8.0.0",
+		"prisma-field-encryption": "^1.6.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"redaxios": "^0.5.1",
+		"vitest": "^3.2.4",
+		"zod": "^3.25.71"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.5",
+		"@types/node": "^22.5.4",
+		"@types/react": "^19.0.8",
+		"@types/react-dom": "^19.0.3",
+		"prisma": "^6.10.1",
+		"typescript": "^5.7.2",
+		"vite": "^6.3.5",
+		"vite-tsconfig-paths": "^5.1.4"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@parcel/watcher",
+			"@prisma/client",
+			"@prisma/engines",
+			"esbuild",
+			"prisma"
+		]
+	}
+}
