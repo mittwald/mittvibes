@@ -1,4 +1,4 @@
-import { Alert, Text } from "@mittwald/flow-remote-react-components";
+import { Alert, Text, Heading } from "@mittwald/flow-remote-react-components";
 
 interface ErrorMessageProps {
 	message: string;
@@ -8,8 +8,7 @@ interface ErrorMessageProps {
 export function ErrorMessage({ message, title = "Error" }: ErrorMessageProps) {
 	return (
 		<Alert status="danger">
-			<Text style={{ fontWeight: "bold" }}>{title}</Text>
-			<br />
+			<Heading level={4}>{title}</Heading>
 			<Text>{message}</Text>
 		</Alert>
 	);
