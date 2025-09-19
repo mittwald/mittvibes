@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { randomBytes } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -151,14 +152,25 @@ DATABASE_URL="${databaseUrl}"
 PRISMA_FIELD_ENCRYPTION_KEY="${encryptionKey}"
 
 # mittwald Extension
-EXTENSION_ID=
-EXTENSION_SECRET=
+EXTENSION_ID=REPLACE_ME
+EXTENSION_SECRET=REPLACE_ME
 
 NODE_ENV=development
 `;
 
-      await fs.writeFile(path.join(projectPath, '.env'), envContent);
-      console.log(chalk.white('✓ .env file created'));
+      const envPath = path.join(projectPath, '.env');
+      try {
+        await fs.writeFile(envPath, envContent);
+        // Verify the file was created
+        if (await fs.pathExists(envPath)) {
+          console.log(chalk.white(`✓ .env file created in ${projectName}/`));
+        } else {
+          console.log(chalk.bold.white(`⚠️  .env file creation may have failed in ${projectName}/`));
+        }
+      } catch (error) {
+        console.log(chalk.bold.white(`❌ Failed to create .env file: ${error instanceof Error ? error.message : error}`));
+        console.log(chalk.gray('Please create the .env file manually with your database credentials.'));
+      }
 
       // Generate Prisma client and run migrations
       if (installDeps) {
@@ -209,29 +221,41 @@ NODE_ENV=development
     if (isContributor) {
       console.log(chalk.bold.white('\n🎯 Contributor Setup Steps:\n'));
 
-      console.log(chalk.bold('1. Configure Webhooks:'));
+      console.log(chalk.bold('1. Create Extension in Contributor UI:'));
+      console.log('   Navigate to "Entwicklung" in your organisation');
+      console.log('   Create a new extension and note the EXTENSION_ID');
+      console.log('   For EXTENSION_SECRET (optional for now, see docs if needed):');
+      console.log('   📚 https://developer.mittwald.de/de/docs/v2/contribution/how-to/develop-frontend-fragment/#access-token-anfordern-um-auf-die-mittwald-api-zuzugreifen\n');
+
+      console.log(chalk.bold('2. Configure Webhooks:'));
       console.log('   Go to mStudio Contributor UI and set your webhook URL');
+      console.log('   Example: https://your-domain.example/api/webhooks/mittwald');
       console.log('   Use a single webhook URL for all endpoints\n');
 
-      console.log(chalk.bold('2. Set Required Scopes and Extension Context:'));
+      console.log(chalk.bold('3. Set Required Scopes and Extension Context:'));
       console.log('   Configure scopes in mStudio Contributor UI');
       console.log('   Set extension context (project/customer)');
       console.log('   📚 Documentation: https://developer.mittwald.de/docs/v2/contribution/\n');
 
-      console.log(chalk.bold('3. Configure Anchors:'));
+      console.log(chalk.bold('4. Configure Anchors:'));
       console.log('   Set anchors in mStudio Contributor UI');
       console.log('   Point them to http://localhost:5173 (your local dev server)');
       console.log('   📚 Documentation: https://developer.mittwald.de/de/docs/v2/contribution/reference/frontend-fragment-anchors/\n');
 
-      console.log(chalk.bold('4. Perform First Installation:'));
+      console.log(chalk.bold('5. Deploy Your Application:'));
+      console.log('   Deploy your extension to a public URL');
+      console.log('   Options: ngrok, cloudflared, Vercel, Railway, etc.');
+      console.log('   Ensure your webhook endpoints are accessible\n');
+
+      console.log(chalk.bold('6. Perform First Installation:'));
       console.log('   Install your extension via API');
       console.log('   📚 API Docs: https://api.mittwald.de/v2/docs/#/Marketplace/extension-register-extension\n');
 
-      console.log(chalk.bold('5. Start Development:'));
+      console.log(chalk.bold('7. Start Development:'));
       console.log(chalk.white(`   cd ${projectName}`));
       console.log(chalk.white('   pnpm dev\n'));
 
-      console.log(chalk.bold('6. Open Extension:'));
+      console.log(chalk.bold('8. Open Extension:'));
       console.log('   Open your extension in the selected anchor\n');
 
       console.log(chalk.bold.white('🎉 Congratulations! Your mittwald extension is ready for development!\n'));
@@ -256,12 +280,12 @@ NODE_ENV=development
 
 // Generate a secure encryption key for Prisma field encryption
 function generateEncryptionKey(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let key = '';
-  for (let i = 0; i < 32; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return key;
+  // Generate 32 random bytes for AES-256
+  const keyBytes = randomBytes(32);
+  // Convert to base64
+  const base64Key = keyBytes.toString('base64');
+  // Return in the required format
+  return `k1.aesgcm256.${base64Key}`;
 }
 
 // Run the CLI
