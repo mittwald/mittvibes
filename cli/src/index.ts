@@ -93,8 +93,6 @@ async function main(): Promise<void> {
     spinner.succeed(chalk.white('Project structure created!'));
 
     // Step 3: Dependency Installation
-    console.log(chalk.bold.white('\n📦 Installing dependencies...\n'));
-
     const { installDeps } = await inquirer.prompt<Pick<ProjectConfig, 'installDeps'>>([
       {
         type: 'confirm',
