@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { randomBytes } from 'crypto';
+import { generateKey } from '@47ng/cloak';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +20,8 @@ interface ProjectConfig {
   databaseUrl?: string;
   runMigration: boolean;
   isContributor: boolean;
+  extensionId?: string;
+  extensionSecret?: string;
 }
 
 // Welcome message with ASCII art
@@ -143,8 +145,8 @@ async function main(): Promise<void> {
         }
       ]);
 
-      // Generate Prisma encryption key
-      const encryptionKey = generateEncryptionKey();
+      // Generate Prisma encryption key using @47ng/cloak
+      const encryptionKey = generateKey();
 
       // Create .env file
       const envContent = `# Database
@@ -224,9 +226,32 @@ NODE_ENV=development
       console.log(chalk.bold('1. Create Extension in Contributor UI:'));
       console.log('   Navigate to "Entwicklung" in your organisation');
       console.log('   Create a new extension and note the EXTENSION_ID');
+      console.log('   💡 Tip: The EXTENSION_ID is visible in the "Details" tab of your extension');
       console.log('   For EXTENSION_SECRET (optional for now, see docs if needed):');
       console.log('   📚 https://developer.mittwald.de/de/docs/v2/contribution/how-to/develop-frontend-fragment/#access-token-anfordern-um-auf-die-mittwald-api-zuzugreifen\n');
 
+      // Collect extension credentials after showing step 1
+      const extensionConfig = await inquirer.prompt<Pick<ProjectConfig, 'extensionId' | 'extensionSecret'>>([
+        {
+          type: 'input',
+          name: 'extensionId',
+          message: 'Enter your EXTENSION_ID (from step 1):',
+          validate: (input: string) => {
+            if (input.trim().length > 0) {
+              return true;
+            }
+            return 'EXTENSION_ID is required';
+          }
+        },
+        {
+          type: 'input',
+          name: 'extensionSecret',
+          message: 'Enter your EXTENSION_SECRET (optional, press Enter to use CHANGE_ME):',
+          default: 'CHANGE_ME'
+        }
+      ]);
+
+      // Show remaining setup steps after credentials are collected
       console.log(chalk.bold('2. Configure Webhooks:'));
       console.log('   Go to mStudio Contributor UI and set your webhook URL');
       console.log('   Example: https://your-domain.example/api/webhooks/mittwald');
@@ -258,6 +283,33 @@ NODE_ENV=development
       console.log(chalk.bold('8. Open Extension:'));
       console.log('   Open your extension in the selected anchor\n');
 
+      // Update or create .env file with extension credentials
+      const envPath = path.join(projectPath, '.env');
+      try {
+        let envContent = '';
+
+        if (await fs.pathExists(envPath)) {
+          // Update existing .env file
+          envContent = await fs.readFile(envPath, 'utf8');
+          envContent = envContent.replace('EXTENSION_ID=REPLACE_ME', `EXTENSION_ID=${extensionConfig.extensionId}`);
+          envContent = envContent.replace('EXTENSION_SECRET=REPLACE_ME', `EXTENSION_SECRET=${extensionConfig.extensionSecret || 'CHANGE_ME'}`);
+        } else {
+          // Create new .env file with minimal content
+          envContent = `# mittwald Extension
+EXTENSION_ID=${extensionConfig.extensionId}
+EXTENSION_SECRET=${extensionConfig.extensionSecret || 'CHANGE_ME'}
+
+NODE_ENV=development
+`;
+        }
+
+        await fs.writeFile(envPath, envContent);
+        console.log(chalk.white('✓ Extension credentials saved to .env file'));
+      } catch (error) {
+        console.log(chalk.bold.white('⚠️  Could not save extension credentials to .env file'));
+        console.log(chalk.gray('Please create/update them manually in your .env file'));
+      }
+
       console.log(chalk.bold.white('🎉 Congratulations! Your mittwald extension is ready for development!\n'));
     } else {
       console.log(chalk.bold.white('\n📚 Becoming a Contributor:\n'));
@@ -278,15 +330,6 @@ NODE_ENV=development
   }
 }
 
-// Generate a secure encryption key for Prisma field encryption
-function generateEncryptionKey(): string {
-  // Generate 32 random bytes for AES-256
-  const keyBytes = randomBytes(32);
-  // Convert to base64
-  const base64Key = keyBytes.toString('base64');
-  // Return in the required format
-  return `k1.aesgcm256.${base64Key}`;
-}
 
 // Run the CLI
 main().catch((error) => {

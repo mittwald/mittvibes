@@ -24,6 +24,7 @@
   "author": "weissaufschwarz",
   "license": "MIT",
   "dependencies": {
+    "@47ng/cloak": "^1.2.0",
     "chalk": "^5.3.0",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
