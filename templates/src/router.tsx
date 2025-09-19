@@ -1,27 +1,38 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createRouter } from "@tanstack/react-router";
+import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { DefaultCatchBoundary } from "./components/DefaultCatchBoundary";
+import { NotFound } from "./components/NotFound";
 import { routeTree } from "./routeTree.gen";
 
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 1000 * 60 * 5, // 5 minutes
-			gcTime: 1000 * 60 * 30, // 30 minutes
+export function createRouter() {
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				staleTime: 5 * 60 * 1000, // 5 minutes
+				gcTime: 10 * 60 * 1000, // 10 minutes garbage collection time
+				retry: 3,
+				retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+				refetchOnWindowFocus: false, // Disable refetch on window focus for extension
+				networkMode: "online", // Only run queries when online
+			},
 		},
-	},
-});
+	});
 
-export const router = createRouter({
-	routeTree,
-	context: {
+	return routerWithQueryClient(
+		createTanStackRouter({
+			routeTree,
+			context: { queryClient },
+			defaultPreload: "intent",
+			defaultErrorComponent: DefaultCatchBoundary,
+			defaultNotFoundComponent: () => <NotFound />,
+		}),
 		queryClient,
-	},
-	defaultPreload: "intent",
-	defaultPreloadStaleTime: 0,
-});
+	);
+}
 
 declare module "@tanstack/react-router" {
 	interface Register {
-		router: typeof router;
+		router: ReturnType<typeof createRouter>;
 	}
 }

@@ -1,18 +1,23 @@
 import { PrismaClient } from "@prisma/client";
-import { FieldEncryptionMiddleware } from "prisma-field-encryption";
+import { fieldEncryptionExtension } from "prisma-field-encryption";
 import { env } from "./env";
 
+const createPrismaClient = () =>
+	new PrismaClient({
+		log:
+			env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+	}).$extends(
+		fieldEncryptionExtension({
+			encryptionKey: env.PRISMA_FIELD_ENCRYPTION_KEY,
+		}),
+	);
+
 const globalForPrisma = globalThis as unknown as {
-	prisma: PrismaClient | undefined;
+	prisma: ReturnType<typeof createPrismaClient> | undefined;
 };
 
-export const db =
-	globalForPrisma.prisma ??
-	new PrismaClient({
-		log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-	});
+export const db = globalForPrisma.prisma ?? createPrismaClient();
 
-// Enable field encryption
-db.$use(FieldEncryptionMiddleware(env.PRISMA_FIELD_ENCRYPTION_KEY));
+export type PrismaInstance = typeof db;
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+globalForPrisma.prisma = db;

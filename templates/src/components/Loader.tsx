@@ -1,19 +1,14 @@
-import { Spinner, Text, Content } from "@mittwald/flow-remote-react-components";
-import type { ReactNode } from "react";
+import {
+	IllustratedMessage,
+	LoadingSpinner,
+	Text,
+} from "@mittwald/flow-remote-react-components";
 
-interface LoaderProps {
-	children?: ReactNode;
-}
-
-export function Loader({ children }: LoaderProps) {
+export function Loader() {
 	return (
-		<Content>
-			<Spinner />
-			{children && (
-				<Content>
-					<Text>{children}</Text>
-				</Content>
-			)}
-		</Content>
+		<IllustratedMessage>
+			<LoadingSpinner />
+			<Text>Es wird geladen...</Text>
+		</IllustratedMessage>
 	);
 }

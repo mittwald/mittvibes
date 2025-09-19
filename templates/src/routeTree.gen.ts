@@ -17,92 +17,92 @@ import { ServerRoute as ApiWebhooksMittwaldServerRouteImport } from "./routes/ap
 const rootServerRouteImport = createServerRootRoute();
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
-  getParentRoute: () => rootRouteImport,
+	id: "/",
+	path: "/",
+	getParentRoute: () => rootRouteImport,
 } as any);
 const ApiWebhooksMittwaldServerRoute =
-  ApiWebhooksMittwaldServerRouteImport.update({
-    id: "/api/webhooks/mittwald",
-    path: "/api/webhooks/mittwald",
-    getParentRoute: () => rootServerRouteImport,
-  } as any);
+	ApiWebhooksMittwaldServerRouteImport.update({
+		id: "/api/webhooks/mittwald",
+		path: "/api/webhooks/mittwald",
+		getParentRoute: () => rootServerRouteImport,
+	} as any);
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
+	"/": typeof IndexRoute;
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
+	"/": typeof IndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
+	__root__: typeof rootRouteImport;
+	"/": typeof IndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/";
-  id: "__root__" | "/";
-  fileRoutesById: FileRoutesById;
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths: "/";
+	fileRoutesByTo: FileRoutesByTo;
+	to: "/";
+	id: "__root__" | "/";
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
+	IndexRoute: typeof IndexRoute;
 }
 export interface FileServerRoutesByFullPath {
-  "/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
+	"/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
 }
 export interface FileServerRoutesByTo {
-  "/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
+	"/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
 }
 export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport;
-  "/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
+	__root__: typeof rootServerRouteImport;
+	"/api/webhooks/mittwald": typeof ApiWebhooksMittwaldServerRoute;
 }
 export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath;
-  fullPaths: "/api/webhooks/mittwald";
-  fileServerRoutesByTo: FileServerRoutesByTo;
-  to: "/api/webhooks/mittwald";
-  id: "__root__" | "/api/webhooks/mittwald";
-  fileServerRoutesById: FileServerRoutesById;
+	fileServerRoutesByFullPath: FileServerRoutesByFullPath;
+	fullPaths: "/api/webhooks/mittwald";
+	fileServerRoutesByTo: FileServerRoutesByTo;
+	to: "/api/webhooks/mittwald";
+	id: "__root__" | "/api/webhooks/mittwald";
+	fileServerRoutesById: FileServerRoutesById;
 }
 export interface RootServerRouteChildren {
-  ApiWebhooksMittwaldServerRoute: typeof ApiWebhooksMittwaldServerRoute;
+	ApiWebhooksMittwaldServerRoute: typeof ApiWebhooksMittwaldServerRoute;
 }
 
 declare module "@tanstack/react-router" {
-  interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-  }
+	interface FileRoutesByPath {
+		"/": {
+			id: "/";
+			path: "/";
+			fullPath: "/";
+			preLoaderRoute: typeof IndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+	}
 }
 declare module "@tanstack/react-start/server" {
-  interface ServerFileRoutesByPath {
-    "/api/webhooks/mittwald": {
-      id: "/api/webhooks/mittwald";
-      path: "/api/webhooks/mittwald";
-      fullPath: "/api/webhooks/mittwald";
-      preLoaderRoute: typeof ApiWebhooksMittwaldServerRouteImport;
-      parentRoute: typeof rootServerRouteImport;
-    };
-  }
+	interface ServerFileRoutesByPath {
+		"/api/webhooks/mittwald": {
+			id: "/api/webhooks/mittwald";
+			path: "/api/webhooks/mittwald";
+			fullPath: "/api/webhooks/mittwald";
+			preLoaderRoute: typeof ApiWebhooksMittwaldServerRouteImport;
+			parentRoute: typeof rootServerRouteImport;
+		};
+	}
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+	IndexRoute: IndexRoute,
 };
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();
 const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiWebhooksMittwaldServerRoute: ApiWebhooksMittwaldServerRoute,
+	ApiWebhooksMittwaldServerRoute: ApiWebhooksMittwaldServerRoute,
 };
 export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>();
+	._addFileChildren(rootServerRouteChildren)
+	._addFileTypes<FileServerRouteTypes>();

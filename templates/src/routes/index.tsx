@@ -2,7 +2,6 @@ import {
 	Button,
 	Heading,
 	Text,
-	LayoutCard,
 	Content,
 } from "@mittwald/flow-remote-react-components";
 import { useQuery } from "@tanstack/react-query";
