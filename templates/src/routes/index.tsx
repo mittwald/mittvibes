@@ -3,6 +3,7 @@ import {
 	Heading,
 	Text,
 	Content,
+	CodeBlock,
 } from "@mittwald/flow-remote-react-components";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -41,19 +42,11 @@ function RouteComponent() {
 
 			{helloData && (
 				<Content>
-					<Text style={{ fontWeight: "bold" }}>Server Response:</Text>
-					<pre
-						style={{
-							background: "#f5f5f5",
-							padding: "1rem",
-							borderRadius: "4px",
-							fontFamily: "monospace",
-							fontSize: "0.9rem",
-							overflow: "auto",
-						}}
-					>
-						{JSON.stringify(helloData, null, 2)}
-					</pre>
+					<Text>Server Response:</Text>
+					<CodeBlock
+						language="json"
+						code={JSON.stringify(helloData, null, 2)}
+					/>
 				</Content>
 			)}
 
