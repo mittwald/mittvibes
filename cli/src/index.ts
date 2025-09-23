@@ -95,8 +95,8 @@ async function main(): Promise<void> {
 
     const spinner = ora("Creating project structure...").start();
 
-    // Copy templates (excluding node_modules)
-    const templatesPath = path.join(__dirname, "..", "..", "templates");
+    // Copy templates from bundled location (excluding node_modules)
+    const templatesPath = path.join(__dirname, "templates");
     await fs.copy(templatesPath, projectPath, {
       filter: (src) => !src.includes("node_modules"),
     });

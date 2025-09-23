@@ -8,12 +8,16 @@
     "mittvibes": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && pnpm copy-templates",
+    "copy-templates": "cp -r ../templates dist/templates",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm clean && pnpm build"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "keywords": [
     "mittwald",
     "extension",
