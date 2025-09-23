@@ -19,18 +19,37 @@ npx mittvibes-cli
 
 ## Usage
 
-Run the CLI in your desired directory:
+### First Time Setup
+
+Before creating extension projects, you need to authenticate:
+
+```bash
+# Authenticate with mittwald
+mittvibes auth:login
+```
+
+This will:
+- Open your browser for OAuth authentication
+- Use port 52847 for the callback (ensure it's available)
+- Store authentication tokens securely
+
+### Creating Extensions
+
+Once authenticated, run the CLI in your desired directory:
 
 ```bash
 mittvibes
 ```
 
-The CLI will guide you through the setup process:
+The CLI will guide you through the complete setup process:
 
-1. **Project Configuration**: Choose project name and directory
-2. **Dependency Installation**: Automatically install dependencies with pnpm
-3. **Database Setup**: Configure PostgreSQL connection and run migrations
-4. **Contributor Setup**: Choose between contributor paths
+1. **Organization Selection**: Choose which mittwald organization to use
+2. **Contributor Check**: Automatically verify contributor status
+3. **Interest Submission**: Submit contributor interest if needed (via API)
+4. **Project Configuration**: Choose project name and directory
+5. **Dependency Installation**: Automatically install dependencies with pnpm
+6. **Database Setup**: Configure PostgreSQL connection and run migrations
+7. **Extension Configuration**: Set up mittwald extension credentials
 
 ## Features
 
@@ -43,11 +62,14 @@ The CLI will guide you through the setup process:
 - Biome linting and formatting
 
 ### 🛠️ Developer Experience
-- Interactive CLI
-- Automatic dependency installation
-- Database migration handling
-- Environment configuration
-- Pre-configured development scripts
+- **OAuth Authentication**: Secure authentication with mittwald
+- **Organization Management**: Select and manage mittwald organizations
+- **Contributor Status**: Automatic contributor verification and interest submission
+- **Interactive CLI**: Step-by-step guided setup
+- **Automatic dependency installation**: Seamless dependency management
+- **Database migration handling**: Automated database setup
+- **Environment configuration**: Pre-configured with organization details
+- **Pre-configured development scripts**: Ready-to-run development environment
 
 ### 📦 Generated Project Structure
 ```
@@ -65,6 +87,7 @@ my-extension/
 │   └── migrations/
 ├── package.json
 ├── vite.config.ts
+├── .env                 # Pre-configured with organization ID and credentials
 └── .env.example
 ```
 
@@ -77,12 +100,16 @@ my-extension/
 - Node.js v20.11.1 or higher
 - pnpm v10.4.1 or higher
 
+### For Using the CLI
+- **mittwald Account**: Account with access to organizations
+- **Internet Access**: Required for OAuth authentication and API communication
+- **Available Port**: Port 52847 must be available for OAuth callback
+
 ### For Generated Extensions
 - **Node.js & pnpm**: Required for running the generated extension projects
 - **Database**: PostgreSQL database with non-pooling connection
 - **Hosting**: A place to run the generated boilerplate (localhost for development, or hosting service for production)
-- **Internet Access**: For webhook configuration and mittwald API communication
-- **mittwald Account**: Access to mStudio for extension configuration
+- **Contributor Status**: Organization must have contributor access for extension development
 
 ## Development
 
@@ -95,6 +122,31 @@ cd cli
 pnpm install
 pnpm start
 ```
+
+## CLI Commands
+
+The CLI provides several commands for managing authentication and projects:
+
+```bash
+# Authentication
+mittvibes auth:login    # Authenticate with mittwald OAuth
+mittvibes auth:logout   # Clear authentication tokens
+mittvibes auth:status   # Check authentication status
+
+# Project Creation
+mittvibes              # Create new extension project (default)
+mittvibes init         # Explicit project initialization
+
+# Help
+mittvibes help         # Show available commands
+```
+
+### Authentication Details
+
+- **OAuth Flow**: Uses PKCE (Proof Key for Code Exchange) for secure authentication
+- **Callback Port**: Fixed port 52847 (high user range to avoid conflicts)
+- **Token Storage**: Encrypted storage in `~/.mittvibes/config.json`
+- **API Integration**: Uses official `@mittwald/api-client` for all API calls
 
 ## Technology Stack
 
@@ -177,21 +229,69 @@ npm install -g ./mittvibes-cli-1.0.0.tgz
 mittvibes
 ```
 
-## Contributor Setup
+## Organization & Contributor Management
 
-### Existing Contributors
-The CLI guides you through:
-1. Webhook configuration in mStudio
-2. Scope and context setup
-3. Anchor configuration (pointing to localhost:5173)
-4. First extension installation via API
-5. Development server startup
+### Automatic Organization Detection
+The CLI automatically:
+1. **Fetches Organizations**: Lists all mittwald organizations you have access to
+2. **Checks Contributor Status**: Verifies contributor status for each organization
+3. **Visual Indicators**: Shows which organizations are contributors (✓) and which are not
 
-### New Contributors
-For users who aren't contributors yet, the CLI provides links to:
+### Contributor Flow
+
+#### For Contributors
+When you select an organization with contributor status:
+1. **Extension Configuration**: Set up extension credentials and webhooks
+2. **Development Environment**: Configure local development settings
+3. **API Integration**: Set up mittwald API access and extensions
+
+#### For Non-Contributors
+When you select an organization without contributor status:
+1. **Interest Submission**: Submit contributor interest via API automatically
+2. **Application Tracking**: Get updates on your contributor application
+3. **Alternative Options**: Switch to a different organization with contributor access
+
+### Manual Contributor Application
+For detailed contributor setup, see the official guide:
 - [Become a Contributor Guide](https://developer.mittwald.de/de/docs/v2/contribution/how-to/become-contributor/)
-- Extension development documentation
-- API documentation
+- [Extension Development Documentation](https://developer.mittwald.de/docs/v2/contribution/)
+- [API Documentation](https://api.mittwald.de/v2/docs/)
+
+## Troubleshooting
+
+### Authentication Issues
+
+**Port 52847 already in use:**
+```bash
+# Check what's using the port
+lsof -i :52847
+# Kill the process if needed, then retry authentication
+```
+
+**Browser doesn't open automatically:**
+- The CLI will display the OAuth URL to copy manually
+- Ensure your system allows opening browser links
+
+**Authentication fails:**
+```bash
+# Clear stored tokens and retry
+mittvibes auth:logout
+mittvibes auth:login
+```
+
+### API Issues
+
+**"Not authenticated" errors:**
+```bash
+# Check authentication status
+mittvibes auth:status
+# Re-authenticate if needed
+mittvibes auth:login
+```
+
+**Organization not found:**
+- Ensure you have access to the mittwald organization
+- Check that your account has the necessary permissions
 
 ## Support
 

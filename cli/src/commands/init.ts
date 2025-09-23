@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import { generateKey } from "@47ng/cloak";
+import { selectOrganization } from "./organization.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,21 @@ interface ProjectConfig {
 // Main init function (extracted from old index.ts)
 export async function init(): Promise<void> {
   try {
-    // Step 1: Welcome & Mode Selection
+    // Step 1: Organization Selection
+    console.log(chalk.bold.white("\n🎯 Organization Setup\n"));
+    console.log(chalk.white("First, let's select which organization you want to create an extension for."));
+
+    const { selectedCustomerId, isContributor: hasContributorAccess } = await selectOrganization();
+
+    if (!hasContributorAccess) {
+      // This shouldn't happen as selectOrganization handles non-contributors
+      console.log(chalk.bold.white("\n❌ No contributor access"));
+      process.exit(1);
+    }
+
+    console.log(chalk.green("\n✓ Organization confirmed with contributor access"));
+
+    // Step 2: Welcome & Mode Selection
     const { mode } = await inquirer.prompt<Pick<ProjectConfig, "mode">>([
       {
         type: "list",
@@ -115,7 +130,7 @@ export async function init(): Promise<void> {
         installSpinner.succeed(
           chalk.white("Dependencies installed successfully!")
         );
-      } catch (error) {
+      } catch {
         installSpinner.fail(chalk.white("Failed to install dependencies"));
         console.log(
           chalk.gray(
@@ -170,6 +185,9 @@ PRISMA_FIELD_ENCRYPTION_KEY="${encryptionKey}"
 # mittwald Extension
 EXTENSION_ID=REPLACE_ME
 EXTENSION_SECRET=REPLACE_ME
+
+# mittwald Organization
+MITTWALD_CUSTOMER_ID=${selectedCustomerId}
 
 NODE_ENV=development
 `;
@@ -226,7 +244,7 @@ NODE_ENV=development
               stdio: "pipe",
             });
             migrationSpinner.succeed(chalk.white("Database setup completed!"));
-          } catch (error) {
+          } catch {
             migrationSpinner.fail(chalk.white("Failed to setup database"));
             console.log(
               chalk.gray(
@@ -247,22 +265,8 @@ NODE_ENV=development
     );
     console.log("3. Note down the public URL for webhook configuration\n");
 
-    // Step 5: Contributor Path Selection
-    const { isContributor } = await inquirer.prompt<
-      Pick<ProjectConfig, "isContributor">
-    >([
-      {
-        type: "list",
-        name: "isContributor",
-        message: "Are you already a mittwald contributor?",
-        choices: [
-          { name: "Yes, I am a contributor", value: true },
-          { name: "No, not yet", value: false },
-        ],
-      },
-    ]);
-
-    if (isContributor) {
+    // Step 5: Extension Configuration (we already confirmed contributor status)
+    {
       console.log(chalk.bold.white("\n🎯 Contributor Setup Steps:\n"));
 
       console.log(chalk.bold("1. Create Extension in Contributor UI:"));
@@ -366,13 +370,16 @@ NODE_ENV=development
 EXTENSION_ID=${extensionConfig.extensionId}
 EXTENSION_SECRET=${extensionConfig.extensionSecret || "CHANGE_ME"}
 
+# mittwald Organization
+MITTWALD_CUSTOMER_ID=${selectedCustomerId}
+
 NODE_ENV=development
 `;
         }
 
         await fs.writeFile(envPath, envContent);
         console.log(chalk.white("✓ Extension credentials saved to .env file"));
-      } catch (error) {
+      } catch {
         console.log(
           chalk.bold.white(
             "⚠️  Could not save extension credentials to .env file"
@@ -388,33 +395,13 @@ NODE_ENV=development
           "🎉 Congratulations! Your mittwald extension is ready for development!\n"
         )
       );
-    } else {
-      console.log(chalk.bold.white("\n📚 Becoming a Contributor:\n"));
-      console.log(
-        "To use mittwald extensions, you need to become a contributor first."
-      );
-      console.log("Please follow the guide at:");
-      console.log(
-        chalk.underline.white(
-          "https://developer.mittwald.de/de/docs/v2/contribution/how-to/become-contributor/\n"
-        )
-      );
-      console.log(
-        chalk.gray(
-          "💡 Tip: Keep your boilerplate unchanged while you complete the contributor process."
-        )
-      );
-      console.log(
-        "   You can come back and continue the setup once you're approved.\n"
-      );
     }
 
     console.log(chalk.white("━".repeat(60)));
     console.log(
-      chalk.bold.white("\n📁 Your project is ready at: ") +
-        chalk.white(projectPath)
+      `${chalk.bold.white("\n📁 Your project is ready at: ")}${chalk.white(projectPath)}`
     );
-    console.log(chalk.white("━".repeat(60) + "\n"));
+    console.log(chalk.white(`${"━".repeat(60)}\n`));
   } catch (error) {
     console.error(
       chalk.bold.white("\n❌ Error:"),
