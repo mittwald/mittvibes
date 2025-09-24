@@ -18,7 +18,7 @@ const OAUTH_TOKEN_URL = "https://api.mittwald.de/v2/oauth2/token";
 // Using PKCE flow - no client secret required
 // This client_id must be registered with mittwald OAuth
 // Redirect URI must be set to: http://localhost:52847/callback
-const CLIENT_ID = "mittvibes-cli"; // TODO: Replace with actual registered client_id
+const CLIENT_ID = "mittvibes"; // hard coded
 
 interface TokenResponse {
   access_token: string;
@@ -46,7 +46,10 @@ function createCallbackServer(
       return;
     }
 
-    const urlParams = new URL(req.url, `http://localhost:${OAUTH_CALLBACK_PORT}`);
+    const urlParams = new URL(
+      req.url,
+      `http://localhost:${OAUTH_CALLBACK_PORT}`
+    );
     const code = urlParams.searchParams.get("code");
     const error = urlParams.searchParams.get("error");
 
@@ -100,7 +103,10 @@ function createCallbackServer(
   return server;
 }
 
-async function exchangeCodeForToken(code: string, verifier: string): Promise<TokenResponse> {
+async function exchangeCodeForToken(
+  code: string,
+  verifier: string
+): Promise<TokenResponse> {
   const params = new URLSearchParams({
     grant_type: "authorization_code",
     code,
@@ -143,9 +149,11 @@ export async function startOAuthFlow(): Promise<void> {
       // Handle server errors
       server.on("error", (error: NodeJS.ErrnoException) => {
         if (error.code === "EADDRINUSE") {
-          reject(new Error(
-            `Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`
-          ));
+          reject(
+            new Error(
+              `Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`
+            )
+          );
         } else {
           reject(error);
         }
@@ -166,7 +174,11 @@ export async function startOAuthFlow(): Promise<void> {
 
     // Open browser
     spinner.text = "Opening browser for authentication...";
-    console.log(chalk.white(`\nIf the browser doesn't open automatically, visit:\n${authUrl}\n`));
+    console.log(
+      chalk.white(
+        `\nIf the browser doesn't open automatically, visit:\n${authUrl}\n`
+      )
+    );
 
     await open(authUrl);
     spinner.text = "Waiting for authentication...";
@@ -189,4 +201,3 @@ export async function startOAuthFlow(): Promise<void> {
     throw error;
   }
 }
-
