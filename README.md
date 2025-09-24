@@ -215,7 +215,7 @@ pnpm dev
 pnpm build && node dist/index.js
 
 # Option 3: Create global symlink for testing
-npm link
+pnpm link --global
 # Now you can run 'mittvibes' from anywhere
 
 # Option 4: Test in a separate directory
