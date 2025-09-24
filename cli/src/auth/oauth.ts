@@ -86,12 +86,55 @@ function createCallbackServer(
     }
 
     // Success response
-    res.writeHead(200, { "Content-Type": "text/html" });
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(`
       <html>
-        <body style="font-family: system-ui; padding: 2rem; background: #000; color: #fff;">
-          <h2 style="color: #0f0;">✓ Authentication Successful!</h2>
-          <p>You can close this window and return to the CLI.</p>
+        <head>
+          <meta charset="UTF-8">
+          <title>mittvibes CLI - Authentication Complete</title>
+          <style>
+            body {
+              font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+              padding: 3rem 2rem;
+              background: #000;
+              color: #fff;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              text-align: center;
+            }
+            .success {
+              font-size: 1.5rem;
+              font-weight: bold;
+              margin-bottom: 1rem;
+              color: #fff;
+            }
+            .checkmark {
+              color: #fff;
+              font-size: 2rem;
+              margin-right: 0.5rem;
+            }
+            .instruction {
+              font-size: 1rem;
+              color: #ccc;
+              margin-top: 1rem;
+            }
+            .brand {
+              color: #666;
+              font-size: 0.9rem;
+              margin-top: 2rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="success">
+            <span class="checkmark">✓</span>Authentication Successful
+          </div>
+          <div class="instruction">You can close this window and return to the CLI.</div>
+          <div class="brand">mittvibes CLI</div>
         </body>
       </html>
     `);
@@ -160,17 +203,18 @@ export async function startOAuthFlow(): Promise<void> {
       });
     });
 
-    // Build authorization URL
-    const authParams = new URLSearchParams({
-      client_id: CLIENT_ID,
-      response_type: "code",
-      redirect_uri: OAUTH_CALLBACK_URL,
-      code_challenge: challenge,
-      code_challenge_method: "S256",
-      scope: "user:read project:write customer:write extension:write",
-    });
+    // Generate state parameter for CSRF protection
+    const state = crypto.randomBytes(16).toString("hex");
 
-    const authUrl = `${OAUTH_AUTHORIZE_URL}?${authParams.toString()}`;
+    // Build authorization URL matching the working example format
+    const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+      OAUTH_CALLBACK_URL
+    )}&response_type=code&scope=${encodeURIComponent(
+      "user:read project:write customer:write extension:write"
+    )}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
+
+    // Debug: Log the generated URL for troubleshooting
+    console.log(chalk.gray(`\nDebug - Generated OAuth URL: ${authUrl}\n`));
 
     // Open browser
     spinner.text = "Opening browser for authentication...";
