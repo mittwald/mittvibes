@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import { generateKey } from "@47ng/cloak";
 import { selectOrganization } from "./organization.js";
+import { getProjects } from "../api/mittwald.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,8 @@ interface ProjectConfig {
   databaseUrl?: string;
   runMigration: boolean;
   isContributor: boolean;
+  extensionContext: "customer" | "project";
+  selectedContextId?: string;
   extensionId?: string;
   extensionSecret?: string;
 }
@@ -40,7 +43,73 @@ export async function init(): Promise<void> {
 
     console.log(chalk.green("\n✓ Organization confirmed with contributor access"));
 
-    // Step 2: Welcome & Mode Selection
+    // Step 2: Extension Context Selection
+    console.log(chalk.bold.white("\n📍 Extension Context Selection\n"));
+    console.log(chalk.white("Choose the context where your extension will be available:"));
+
+    const { extensionContext } = await inquirer.prompt<Pick<ProjectConfig, "extensionContext">>([
+      {
+        type: "list",
+        name: "extensionContext",
+        message: "Where should users access your extension?",
+        choices: [
+          {
+            name: "Customer Level - Available in organization menu",
+            value: "customer" as const,
+          },
+          {
+            name: "Project Level - Available in individual project menus",
+            value: "project" as const,
+          },
+        ],
+      },
+    ]);
+
+    // Step 3: Context-specific Selection
+    let selectedContextId: string;
+    if (extensionContext === "project") {
+      console.log(chalk.bold.white("\n📂 Project Selection\n"));
+      console.log(chalk.white("Loading your projects..."));
+
+      try {
+        const projects = await getProjects();
+
+        if (projects.length === 0) {
+          console.log(chalk.bold.white("\n❌ No projects found"));
+          console.log(chalk.gray("You need at least one project to create a project-level extension."));
+          process.exit(1);
+        }
+
+        const { selectedProjectId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedProjectId",
+            message: "Select the project for testing your extension:",
+            choices: projects.map((project) => ({
+              name: `${project.description} (${project.id})`,
+              value: project.id,
+            })),
+          },
+        ]);
+        selectedContextId = selectedProjectId;
+      } catch (error) {
+        console.log(chalk.bold.white("\n❌ Failed to load projects"));
+        console.log(chalk.gray(`Error: ${error instanceof Error ? error.message : error}`));
+        process.exit(1);
+      }
+    } else {
+      // For customer context, use the selected customer ID
+      selectedContextId = selectedCustomerId;
+    }
+
+    console.log(chalk.green(`\n✓ Extension context: ${extensionContext} (${selectedContextId})`));
+
+    // Generate context-specific anchor URL
+    const anchorUrl = extensionContext === "customer"
+      ? "/customers/customer/menu/section/extensions/item"
+      : "/projects/project/menu/section/extensions/item";
+
+    // Step 4: Welcome & Mode Selection
     const { mode } = await inquirer.prompt<Pick<ProjectConfig, "mode">>([
       {
         type: "list",
@@ -177,6 +246,9 @@ export async function init(): Promise<void> {
       // Generate Prisma encryption key using @47ng/cloak
       const encryptionKey = generateKey();
 
+      // Generate extension secret automatically
+      const extensionSecret = generateKey();
+
       // Create .env file
       const envContent = `# Database
 DATABASE_URL="${databaseUrl}"
@@ -184,10 +256,15 @@ PRISMA_FIELD_ENCRYPTION_KEY="${encryptionKey}"
 
 # mittwald Extension
 EXTENSION_ID=REPLACE_ME
-EXTENSION_SECRET=REPLACE_ME
+EXTENSION_SECRET=${extensionSecret}
 
 # mittwald Organization
 MITTWALD_CUSTOMER_ID=${selectedCustomerId}
+
+# Extension Context
+EXTENSION_CONTEXT=${extensionContext}
+EXTENSION_CONTEXT_ID=${selectedContextId}
+EXTENSION_ANCHOR_URL=${anchorUrl}
 
 NODE_ENV=development
 `;
@@ -267,29 +344,22 @@ NODE_ENV=development
 
     // Step 5: Extension Configuration (we already confirmed contributor status)
     {
-      console.log(chalk.bold.white("\n🎯 Contributor Setup Steps:\n"));
+      console.log(chalk.bold.white("\n🎯 Extension Development Setup\n"));
 
-      console.log(chalk.bold("1. Create Extension in Contributor UI:"));
-      console.log('   Navigate to "Entwicklung" in your organisation');
-      console.log("   Create a new extension and note the EXTENSION_ID");
-      console.log(
-        '   💡 Tip: The EXTENSION_ID is visible in the "Details" tab of your extension'
-      );
-      console.log(
-        "   For EXTENSION_SECRET (optional for now, see docs if needed):"
-      );
-      console.log(
-        "   📚 https://developer.mittwald.de/de/docs/v2/contribution/how-to/develop-frontend-fragment/#access-token-anfordern-um-auf-die-mittwald-api-zuzugreifen\n"
-      );
+      console.log(chalk.bold.white("Required Manual Steps:"));
+      console.log(chalk.white("1. Create Extension in mStudio Contributor UI:"));
+      console.log(chalk.gray('   • Navigate to "Entwicklung" in your organization'));
+      console.log(chalk.gray('   • Create a new extension and copy the EXTENSION_ID'));
+      console.log(chalk.gray('   • Set extension context to: ') + chalk.bold(extensionContext));
+      console.log(chalk.gray('   • Set anchor URL to: ') + chalk.bold(anchorUrl));
+      console.log(chalk.gray('   • Leave scopes empty for now'));
+      console.log(chalk.gray('   • Set webhook URL to your public endpoint\n'));
 
-      // Collect extension credentials after showing step 1
-      const extensionConfig = await inquirer.prompt<
-        Pick<ProjectConfig, "extensionId" | "extensionSecret">
-      >([
+      const { extensionId } = await inquirer.prompt<Pick<ProjectConfig, "extensionId">>([
         {
           type: "input",
           name: "extensionId",
-          message: "Enter your EXTENSION_ID (from step 1):",
+          message: "Enter your EXTENSION_ID (from mStudio):",
           validate: (input: string) => {
             if (input.trim().length > 0) {
               return true;
@@ -297,58 +367,21 @@ NODE_ENV=development
             return "EXTENSION_ID is required";
           },
         },
-        {
-          type: "input",
-          name: "extensionSecret",
-          message:
-            "Enter your EXTENSION_SECRET (optional, press Enter to use CHANGE_ME):",
-          default: "CHANGE_ME",
-        },
       ]);
 
-      // Show remaining setup steps after credentials are collected
-      console.log(chalk.bold("2. Configure Webhooks:"));
-      console.log("   Go to mStudio Contributor UI and set your webhook URL");
-      console.log(
-        "   Example: https://your-domain.example/api/webhooks/mittwald"
-      );
-      console.log("   Use a single webhook URL for all endpoints\n");
+      console.log(chalk.bold.white("\n2. Development Workflow:"));
+      console.log(chalk.white(`   • Extension Secret: ${chalk.green('Auto-generated ✓')}`));
+      console.log(chalk.white(`   • Context: ${chalk.green(`${extensionContext} ✓`)}`));
+      console.log(chalk.white(`   • Anchor URL: ${chalk.green(`${anchorUrl} ✓`)}`));
+      console.log(chalk.white(`   • Scopes: ${chalk.green('Empty (as requested) ✓')}`));
 
-      console.log(chalk.bold("3. Set Required Scopes and Extension Context:"));
-      console.log("   Configure scopes in mStudio Contributor UI");
-      console.log("   Set extension context (project/customer)");
-      console.log(
-        "   📚 Documentation: https://developer.mittwald.de/docs/v2/contribution/\n"
-      );
-
-      console.log(chalk.bold("4. Configure Anchors:"));
-      console.log("   Set anchors in mStudio Contributor UI");
-      console.log(
-        "   Point them to http://localhost:5173 (your local dev server)"
-      );
-      console.log(
-        "   📚 Documentation: https://developer.mittwald.de/de/docs/v2/contribution/reference/frontend-fragment-anchors/\n"
-      );
-
-      console.log(chalk.bold("5. Deploy Your Application:"));
-      console.log("   Deploy your extension to a public URL");
-      console.log("   Options: ngrok, cloudflared, Vercel, Railway, etc.");
-      console.log("   Ensure your webhook endpoints are accessible\n");
-
-      console.log(chalk.bold("6. Perform First Installation:"));
-      console.log("   Install your extension via API");
-      console.log(
-        "   📚 API Docs: https://developer.mittwald.de/de/docs/v2/reference/marketplace/extension-create-extension-instance/\n"
-      );
-
-      console.log(chalk.bold("7. Start Development:"));
+      console.log(chalk.bold.white("\n3. Next Steps:"));
       console.log(chalk.white(`   cd ${projectName}`));
-      console.log(chalk.white("   pnpm dev\n"));
+      console.log(chalk.white("   pnpm dev"));
+      console.log(chalk.white("   • Deploy to public URL (ngrok, cloudflared, etc.)"));
+      console.log(chalk.white("   • Test extension installation in mStudio\n"));
 
-      console.log(chalk.bold("8. Open Extension:"));
-      console.log("   Open your extension in the selected anchor\n");
-
-      // Update or create .env file with extension credentials
+      // Update .env file with extension ID
       const envPath = path.join(projectPath, ".env");
       try {
         let envContent = "";
@@ -358,43 +391,35 @@ NODE_ENV=development
           envContent = await fs.readFile(envPath, "utf8");
           envContent = envContent.replace(
             "EXTENSION_ID=REPLACE_ME",
-            `EXTENSION_ID=${extensionConfig.extensionId}`
-          );
-          envContent = envContent.replace(
-            "EXTENSION_SECRET=REPLACE_ME",
-            `EXTENSION_SECRET=${extensionConfig.extensionSecret || "CHANGE_ME"}`
+            `EXTENSION_ID=${extensionId}`
           );
         } else {
           // Create new .env file with minimal content
+          const newExtensionSecret = generateKey();
           envContent = `# mittwald Extension
-EXTENSION_ID=${extensionConfig.extensionId}
-EXTENSION_SECRET=${extensionConfig.extensionSecret || "CHANGE_ME"}
+EXTENSION_ID=${extensionId}
+EXTENSION_SECRET=${newExtensionSecret}
 
 # mittwald Organization
 MITTWALD_CUSTOMER_ID=${selectedCustomerId}
+
+# Extension Context
+EXTENSION_CONTEXT=${extensionContext}
+EXTENSION_CONTEXT_ID=${selectedContextId}
+EXTENSION_ANCHOR_URL=${anchorUrl}
 
 NODE_ENV=development
 `;
         }
 
         await fs.writeFile(envPath, envContent);
-        console.log(chalk.white("✓ Extension credentials saved to .env file"));
+        console.log(chalk.green("✓ Extension configuration saved to .env file"));
       } catch {
-        console.log(
-          chalk.bold.white(
-            "⚠️  Could not save extension credentials to .env file"
-          )
-        );
-        console.log(
-          chalk.gray("Please create/update them manually in your .env file")
-        );
+        console.log(chalk.bold.white("⚠️  Could not save extension configuration to .env file"));
+        console.log(chalk.gray("Please create/update them manually in your .env file"));
       }
 
-      console.log(
-        chalk.bold.white(
-          "🎉 Congratulations! Your mittwald extension is ready for development!\n"
-        )
-      );
+      console.log(chalk.bold.white("🎉 Your mittwald extension is ready for development!\n"));
     }
 
     console.log(chalk.white("━".repeat(60)));
