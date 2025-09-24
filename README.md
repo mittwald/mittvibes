@@ -46,10 +46,12 @@ The CLI will guide you through the complete setup process:
 1. **Organization Selection**: Choose which mittwald organization to use
 2. **Contributor Check**: Automatically verify contributor status
 3. **Interest Submission**: Submit contributor interest if needed (via API)
-4. **Project Configuration**: Choose project name and directory
-5. **Dependency Installation**: Automatically install dependencies with pnpm
-6. **Database Setup**: Configure PostgreSQL connection and run migrations
-7. **Extension Configuration**: Set up mittwald extension credentials
+4. **Extension Context Selection**: Choose between customer-level or project-level extensions
+5. **Project Selection**: Select specific project for project-level extensions
+6. **Project Configuration**: Choose project name and directory
+7. **Dependency Installation**: Automatically install dependencies with pnpm
+8. **Database Setup**: Configure PostgreSQL connection and run migrations
+9. **Extension Configuration**: Set up mittwald extension credentials with auto-generated secrets
 
 ## Features
 
@@ -62,13 +64,16 @@ The CLI will guide you through the complete setup process:
 - Biome linting and formatting
 
 ### 🛠️ Developer Experience
-- **OAuth Authentication**: Secure authentication with mittwald
+- **OAuth Authentication**: Secure PKCE-based authentication with mittwald
 - **Organization Management**: Select and manage mittwald organizations
 - **Contributor Status**: Automatic contributor verification and interest submission
-- **Interactive CLI**: Step-by-step guided setup
+- **Extension Context Management**: Choose between customer-level and project-level extensions
+- **Project Integration**: Automatic project selection and configuration for project-level extensions
+- **Interactive CLI**: Step-by-step guided setup with visual indicators
+- **Automatic Secret Generation**: Auto-generated extension secrets using secure key generation
 - **Automatic dependency installation**: Seamless dependency management
-- **Database migration handling**: Automated database setup
-- **Environment configuration**: Pre-configured with organization details
+- **Database migration handling**: Automated database setup with encryption keys
+- **Environment configuration**: Pre-configured with organization details, extension context, and anchor URLs
 - **Pre-configured development scripts**: Ready-to-run development environment
 
 ### 📦 Generated Project Structure
@@ -87,17 +92,17 @@ my-extension/
 │   └── migrations/
 ├── package.json
 ├── vite.config.ts
-├── .env                 # Pre-configured with organization ID and credentials
+├── .env                 # Pre-configured with organization ID, extension context, and auto-generated credentials
 └── .env.example
 ```
 
 ## Requirements
 
 ### For Running the CLI Tool
-- Node.js v20.11.1 or higher
+- Node.js v18.0.0 or higher
 
 ### For Developing the CLI Tool
-- Node.js v20.11.1 or higher
+- Node.js v18.0.0 or higher
 - pnpm v10.4.1 or higher
 
 ### For Using the CLI
