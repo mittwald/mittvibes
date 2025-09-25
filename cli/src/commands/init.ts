@@ -3,14 +3,93 @@ import chalk from "chalk";
 import ora from "ora";
 import fs from "fs-extra";
 import path from "path";
-import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { pipeline } from "node:stream";
+import { promisify } from "node:util";
+import fetch from "node-fetch";
+import yauzl from "yauzl";
 import { generateKey } from "@47ng/cloak";
 import { selectOrganization } from "./organization.js";
 import { getProjects } from "../api/mittwald.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const pipelineAsync = promisify(pipeline);
+
+async function downloadAndExtractTemplate(projectName: string): Promise<string> {
+  const tempDir = path.join(process.cwd(), `${projectName}-temp`);
+  const zipPath = path.join(tempDir, "repo.zip");
+
+  // Create temp directory
+  await fs.ensureDir(tempDir);
+
+  try {
+    // Download the ZIP file
+    const response = await fetch("https://github.com/weissaufschwarz/mittvibes/archive/refs/heads/main.zip");
+    if (!response.ok) {
+      throw new Error(`Failed to download template: ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      throw new Error("No response body received");
+    }
+
+    // Save ZIP file
+    await pipelineAsync(response.body, createWriteStream(zipPath));
+
+    // Extract ZIP file
+    return new Promise<string>((resolve, reject) => {
+      yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
+        if (err || !zipfile) {
+          reject(err || new Error("Failed to open ZIP file"));
+          return;
+        }
+
+        zipfile.readEntry();
+        zipfile.on("entry", (entry) => {
+          // We want entries from the templates directory
+          if (entry.fileName.startsWith("mittvibes-main/templates/")) {
+            const relativePath = entry.fileName.replace("mittvibes-main/templates/", "");
+
+            if (relativePath && !entry.fileName.endsWith("/")) {
+              const outputPath = path.join(tempDir, "extracted", relativePath);
+
+              // Ensure directory exists
+              fs.ensureDirSync(path.dirname(outputPath));
+
+              zipfile.openReadStream(entry, (err, readStream) => {
+                if (err || !readStream) {
+                  reject(err || new Error("Failed to read ZIP entry"));
+                  return;
+                }
+
+                const writeStream = createWriteStream(outputPath);
+                readStream.pipe(writeStream);
+                writeStream.on("close", () => {
+                  zipfile.readEntry();
+                });
+              });
+            } else {
+              zipfile.readEntry();
+            }
+          } else {
+            zipfile.readEntry();
+          }
+        });
+
+        zipfile.on("end", () => {
+          resolve(path.join(tempDir, "extracted"));
+        });
+
+        zipfile.on("error", reject);
+      });
+    });
+  } finally {
+    // Clean up ZIP file but keep extracted contents
+    if (await fs.pathExists(zipPath)) {
+      await fs.remove(zipPath);
+    }
+  }
+}
 
 interface ProjectConfig {
   mode: "new" | "existing";
@@ -162,21 +241,40 @@ export async function init(): Promise<void> {
       process.exit(1);
     }
 
-    const spinner = ora("Creating project structure...").start();
+    const spinner = ora("Downloading project template...").start();
 
-    // Copy templates from bundled location (excluding node_modules)
-    const templatesPath = path.join(__dirname, "..", "templates");
-    await fs.copy(templatesPath, projectPath, {
-      filter: (src) => !src.includes("node_modules"),
-    });
+    try {
+      // Download and extract the template
+      const extractedPath = await downloadAndExtractTemplate(projectName);
 
-    // Update package.json with project name
-    const packageJsonPath = path.join(projectPath, "package.json");
-    const packageJson = await fs.readJson(packageJsonPath);
-    packageJson.name = projectName;
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+      // Copy extracted templates to project path
+      await fs.copy(extractedPath, projectPath, {
+        filter: (src) => !src.includes("node_modules") && !src.includes(".git"),
+      });
 
-    spinner.succeed(chalk.white("Project structure created!"));
+      // Clean up temporary directory
+      await fs.remove(path.join(process.cwd(), `${projectName}-temp`));
+
+      // Update package.json with project name
+      const packageJsonPath = path.join(projectPath, "package.json");
+      const packageJson = await fs.readJson(packageJsonPath);
+      packageJson.name = projectName;
+      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+
+      spinner.succeed(chalk.white("Project structure created!"));
+    } catch (error) {
+      spinner.fail(chalk.white("Failed to download template repository"));
+      console.log(chalk.bold.white(`❌ Error: ${error instanceof Error ? error.message : error}`));
+      console.log(chalk.gray("Please check your internet connection and try again."));
+
+      // Clean up on error
+      const tempDir = path.join(process.cwd(), `${projectName}-temp`);
+      if (await fs.pathExists(tempDir)) {
+        await fs.remove(tempDir);
+      }
+
+      process.exit(1);
+    }
 
     // Step 3: Dependency Installation
     const { installDeps } = await inquirer.prompt<

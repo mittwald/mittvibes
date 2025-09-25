@@ -8,8 +8,7 @@
 		"mittvibes": "./dist/index.js"
 	},
 	"scripts": {
-		"build": "tsc && pnpm copy-templates",
-		"copy-templates": "rsync -av --exclude='node_modules' --exclude='.git' --exclude='dist' ../templates/ dist/templates/",
+		"build": "tsc",
 		"dev": "tsx src/index.ts",
 		"start": "node dist/index.js",
 		"clean": "rm -rf dist",
@@ -35,13 +34,17 @@
 		"fs-extra": "^11.2.0",
 		"get-port": "^7.1.0",
 		"inquirer": "^9.2.15",
+		"node-fetch": "^3.3.2",
 		"open": "^10.2.0",
-		"ora": "^8.0.1"
+		"ora": "^8.0.1",
+		"yauzl": "^3.2.0"
 	},
 	"devDependencies": {
 		"@types/fs-extra": "^11.0.4",
 		"@types/inquirer": "^9.0.7",
 		"@types/node": "^22.5.4",
+		"@types/node-fetch": "^2.6.13",
+		"@types/yauzl": "^2.10.3",
 		"tsx": "^4.19.1",
 		"typescript": "^5.6.2"
 	},
