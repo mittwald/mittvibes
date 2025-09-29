@@ -213,9 +213,6 @@ export async function startOAuthFlow(): Promise<void> {
 			"user:read project:read project:write customer:read customer:write extension:read extension:write",
 		)}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
 
-		// Debug: Log the generated URL for troubleshooting
-		console.log(chalk.gray(`\nDebug - Generated OAuth URL: ${authUrl}\n`));
-
 		// Open browser
 		spinner.text = "Opening browser for authentication...";
 		console.log(
