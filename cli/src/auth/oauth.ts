@@ -21,41 +21,41 @@ const OAUTH_TOKEN_URL = "https://api.mittwald.de/v2/oauth2/token";
 const CLIENT_ID = "mittvibes"; // hard coded
 
 interface TokenResponse {
-  access_token: string;
-  token_type: string;
+	access_token: string;
+	token_type: string;
 }
 
 function generatePKCEPair(): { verifier: string; challenge: string } {
-  const verifier = crypto.randomBytes(32).toString("base64url");
-  const challenge = crypto
-    .createHash("sha256")
-    .update(verifier)
-    .digest("base64url");
+	const verifier = crypto.randomBytes(32).toString("base64url");
+	const challenge = crypto
+		.createHash("sha256")
+		.update(verifier)
+		.digest("base64url");
 
-  return { verifier, challenge };
+	return { verifier, challenge };
 }
 
 function createCallbackServer(
-  resolve: (value: string) => void,
-  reject: (error: Error) => void
+	resolve: (value: string) => void,
+	reject: (error: Error) => void,
 ): http.Server {
-  const server = http.createServer(async (req, res) => {
-    if (!req.url?.startsWith("/callback")) {
-      res.writeHead(404);
-      res.end("Not found");
-      return;
-    }
+	const server = http.createServer(async (req, res) => {
+		if (!req.url?.startsWith("/callback")) {
+			res.writeHead(404);
+			res.end("Not found");
+			return;
+		}
 
-    const urlParams = new URL(
-      req.url,
-      `http://localhost:${OAUTH_CALLBACK_PORT}`
-    );
-    const code = urlParams.searchParams.get("code");
-    const error = urlParams.searchParams.get("error");
+		const urlParams = new URL(
+			req.url,
+			`http://localhost:${OAUTH_CALLBACK_PORT}`,
+		);
+		const code = urlParams.searchParams.get("code");
+		const error = urlParams.searchParams.get("error");
 
-    if (error) {
-      res.writeHead(400, { "Content-Type": "text/html" });
-      res.end(`
+		if (error) {
+			res.writeHead(400, { "Content-Type": "text/html" });
+			res.end(`
         <html>
           <body style="font-family: system-ui; padding: 2rem; background: #000; color: #fff;">
             <h2>Authentication Failed</h2>
@@ -64,14 +64,14 @@ function createCallbackServer(
           </body>
         </html>
       `);
-      server.close();
-      reject(new Error(`OAuth error: ${error}`));
-      return;
-    }
+			server.close();
+			reject(new Error(`OAuth error: ${error}`));
+			return;
+		}
 
-    if (!code) {
-      res.writeHead(400, { "Content-Type": "text/html" });
-      res.end(`
+		if (!code) {
+			res.writeHead(400, { "Content-Type": "text/html" });
+			res.end(`
         <html>
           <body style="font-family: system-ui; padding: 2rem; background: #000; color: #fff;">
             <h2>Authentication Failed</h2>
@@ -80,14 +80,14 @@ function createCallbackServer(
           </body>
         </html>
       `);
-      server.close();
-      reject(new Error("No authorization code received"));
-      return;
-    }
+			server.close();
+			reject(new Error("No authorization code received"));
+			return;
+		}
 
-    // Success response
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(`
+		// Success response
+		res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+		res.end(`
       <html>
         <head>
           <meta charset="UTF-8">
@@ -139,109 +139,109 @@ function createCallbackServer(
       </html>
     `);
 
-    server.close();
-    resolve(code);
-  });
+		server.close();
+		resolve(code);
+	});
 
-  return server;
+	return server;
 }
 
 async function exchangeCodeForToken(
-  code: string,
-  verifier: string
+	code: string,
+	verifier: string,
 ): Promise<TokenResponse> {
-  const params = new URLSearchParams({
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: OAUTH_CALLBACK_URL,
-    client_id: CLIENT_ID,
-    code_verifier: verifier,
-  });
+	const params = new URLSearchParams({
+		grant_type: "authorization_code",
+		code,
+		redirect_uri: OAUTH_CALLBACK_URL,
+		client_id: CLIENT_ID,
+		code_verifier: verifier,
+	});
 
-  const response = await fetch(OAUTH_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params.toString(),
-  });
+	const response = await fetch(OAUTH_TOKEN_URL, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		body: params.toString(),
+	});
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Token exchange failed: ${error}`);
-  }
+	if (!response.ok) {
+		const error = await response.text();
+		throw new Error(`Token exchange failed: ${error}`);
+	}
 
-  return response.json() as Promise<TokenResponse>;
+	return response.json() as Promise<TokenResponse>;
 }
 
 export async function startOAuthFlow(): Promise<void> {
-  const spinner = ora("Starting OAuth authentication...").start();
+	const spinner = ora("Starting OAuth authentication...").start();
 
-  try {
-    // Generate PKCE pair
-    const { verifier, challenge } = generatePKCEPair();
+	try {
+		// Generate PKCE pair
+		const { verifier, challenge } = generatePKCEPair();
 
-    // Create callback server
-    const authCodePromise = new Promise<string>((resolve, reject) => {
-      const server = createCallbackServer(resolve, reject);
+		// Create callback server
+		const authCodePromise = new Promise<string>((resolve, reject) => {
+			const server = createCallbackServer(resolve, reject);
 
-      server.listen(OAUTH_CALLBACK_PORT, () => {
-        spinner.text = `OAuth callback server listening on port ${OAUTH_CALLBACK_PORT}...`;
-      });
+			server.listen(OAUTH_CALLBACK_PORT, () => {
+				spinner.text = `OAuth callback server listening on port ${OAUTH_CALLBACK_PORT}...`;
+			});
 
-      // Handle server errors
-      server.on("error", (error: NodeJS.ErrnoException) => {
-        if (error.code === "EADDRINUSE") {
-          reject(
-            new Error(
-              `Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`
-            )
-          );
-        } else {
-          reject(error);
-        }
-      });
-    });
+			// Handle server errors
+			server.on("error", (error: NodeJS.ErrnoException) => {
+				if (error.code === "EADDRINUSE") {
+					reject(
+						new Error(
+							`Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`,
+						),
+					);
+				} else {
+					reject(error);
+				}
+			});
+		});
 
-    // Generate state parameter for CSRF protection
-    const state = crypto.randomBytes(16).toString("hex");
+		// Generate state parameter for CSRF protection
+		const state = crypto.randomBytes(16).toString("hex");
 
-    // Build authorization URL matching the working example format
-    const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      OAUTH_CALLBACK_URL
-    )}&response_type=code&scope=${encodeURIComponent(
-      "user:read project:read project:write customer:read customer:write extension:read extension:write"
-    )}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
+		// Build authorization URL matching the working example format
+		const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+			OAUTH_CALLBACK_URL,
+		)}&response_type=code&scope=${encodeURIComponent(
+			"user:read project:read project:write customer:read customer:write extension:read extension:write",
+		)}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
 
-    // Debug: Log the generated URL for troubleshooting
-    console.log(chalk.gray(`\nDebug - Generated OAuth URL: ${authUrl}\n`));
+		// Debug: Log the generated URL for troubleshooting
+		console.log(chalk.gray(`\nDebug - Generated OAuth URL: ${authUrl}\n`));
 
-    // Open browser
-    spinner.text = "Opening browser for authentication...";
-    console.log(
-      chalk.white(
-        `\nIf the browser doesn't open automatically, visit:\n${authUrl}\n`
-      )
-    );
+		// Open browser
+		spinner.text = "Opening browser for authentication...";
+		console.log(
+			chalk.white(
+				`\nIf the browser doesn't open automatically, visit:\n${authUrl}\n`,
+			),
+		);
 
-    await open(authUrl);
-    spinner.text = "Waiting for authentication...";
+		await open(authUrl);
+		spinner.text = "Waiting for authentication...";
 
-    // Wait for auth code
-    const authCode = await authCodePromise;
-    spinner.text = "Exchanging authorization code for tokens...";
+		// Wait for auth code
+		const authCode = await authCodePromise;
+		spinner.text = "Exchanging authorization code for tokens...";
 
-    // Exchange code for tokens
-    const tokenResponse = await exchangeCodeForToken(authCode, verifier);
+		// Exchange code for tokens
+		const tokenResponse = await exchangeCodeForToken(authCode, verifier);
 
-    // Save tokens
-    await saveAuthConfig({
-      accessToken: tokenResponse.access_token,
-    });
+		// Save tokens
+		await saveAuthConfig({
+			accessToken: tokenResponse.access_token,
+		});
 
-    spinner.succeed(chalk.white("Authentication successful!"));
-  } catch (error) {
-    spinner.fail(chalk.white("Authentication failed"));
-    throw error;
-  }
+		spinner.succeed(chalk.white("Authentication successful!"));
+	} catch (error) {
+		spinner.fail(chalk.white("Authentication failed"));
+		throw error;
+	}
 }
