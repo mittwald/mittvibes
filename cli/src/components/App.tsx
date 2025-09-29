@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { isAuthenticated } from "../auth/index.js";
 import { AuthRequired } from "./AuthRequired.js";
 import { HelpScreen } from "./HelpScreen.js";
