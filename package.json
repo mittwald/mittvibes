@@ -1,16 +1,21 @@
 {
-  "name": "mittvibes",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.4.1",
-  "devDependencies": {
-    "@biomejs/biome": "2.2.4"
-  }
+	"name": "mittvibes",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"check": "pnpm biome check .",
+		"format": "pnpm biome format",
+		"format:fix": "pnpm biome format --fix",
+		"lint": "pnpm biome lint",
+		"lint:fix": "pnpm biome lint --fix",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.4.1",
+	"devDependencies": {
+		"@biomejs/biome": "2.2.4"
+	}
 }
