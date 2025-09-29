@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"dev": "tsx src/index.ts",
+		"dev": "tsx src/index.tsx",
 		"start": "node dist/index.js",
 		"clean": "rm -rf dist",
 		"prepublishOnly": "pnpm clean && pnpm build"
@@ -31,14 +31,19 @@
 	"dependencies": {
 		"@47ng/cloak": "^1.2.0",
 		"@mittwald/api-client": "^4.230.0",
+		"@types/react": "^19.1.15",
 		"chalk": "^5.3.0",
 		"dotenv": "^16.4.5",
 		"fs-extra": "^11.2.0",
 		"get-port": "^7.1.0",
+		"ink": "^6.3.1",
+		"ink-select-input": "^6.2.0",
+		"ink-text-input": "^6.0.0",
 		"inquirer": "^9.2.15",
 		"node-fetch": "^3.3.2",
 		"open": "^10.2.0",
 		"ora": "^8.0.1",
+		"react": "^19.1.1",
 		"yauzl": "^3.2.0"
 	},
 	"devDependencies": {
