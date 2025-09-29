@@ -1,8 +1,6 @@
 import crypto from "node:crypto";
 import http from "node:http";
-import chalk from "chalk";
 import open from "open";
-import ora from "ora";
 import { saveAuthConfig } from "../utils/config.js";
 
 // Fixed OAuth callback port (required by OAuth provider)
@@ -175,70 +173,52 @@ async function exchangeCodeForToken(
 }
 
 export async function startOAuthFlow(): Promise<void> {
-	const spinner = ora("Starting OAuth authentication...").start();
+	// Generate PKCE pair
+	const { verifier, challenge } = generatePKCEPair();
 
-	try {
-		// Generate PKCE pair
-		const { verifier, challenge } = generatePKCEPair();
+	// Create callback server
+	const authCodePromise = new Promise<string>((resolve, reject) => {
+		const server = createCallbackServer(resolve, reject);
 
-		// Create callback server
-		const authCodePromise = new Promise<string>((resolve, reject) => {
-			const server = createCallbackServer(resolve, reject);
-
-			server.listen(OAUTH_CALLBACK_PORT, () => {
-				spinner.text = `OAuth callback server listening on port ${OAUTH_CALLBACK_PORT}...`;
-			});
-
-			// Handle server errors
-			server.on("error", (error: NodeJS.ErrnoException) => {
-				if (error.code === "EADDRINUSE") {
-					reject(
-						new Error(
-							`Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`,
-						),
-					);
-				} else {
-					reject(error);
-				}
-			});
+		server.listen(OAUTH_CALLBACK_PORT, () => {
+			// Server is ready
 		});
 
-		// Generate state parameter for CSRF protection
-		const state = crypto.randomBytes(16).toString("hex");
-
-		// Build authorization URL matching the working example format
-		const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-			OAUTH_CALLBACK_URL,
-		)}&response_type=code&scope=${encodeURIComponent(
-			"user:read project:read project:write customer:read customer:write extension:read extension:write",
-		)}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
-
-		// Open browser
-		spinner.text = "Opening browser for authentication...";
-		console.log(
-			chalk.white(
-				`\nIf the browser doesn't open automatically, visit:\n${authUrl}\n`,
-			),
-		);
-
-		await open(authUrl);
-		spinner.text = "Waiting for authentication...";
-
-		// Wait for auth code
-		const authCode = await authCodePromise;
-		spinner.text = "Exchanging authorization code for tokens...";
-
-		// Exchange code for tokens
-		const tokenResponse = await exchangeCodeForToken(authCode, verifier);
-
-		// Save tokens
-		await saveAuthConfig({
-			accessToken: tokenResponse.access_token,
+		// Handle server errors
+		server.on("error", (error: NodeJS.ErrnoException) => {
+			if (error.code === "EADDRINUSE") {
+				reject(
+					new Error(
+						`Port ${OAUTH_CALLBACK_PORT} is already in use. Please close any other applications using this port and try again.`,
+					),
+				);
+			} else {
+				reject(error);
+			}
 		});
+	});
 
-		spinner.succeed(chalk.white("Authentication successful!"));
-	} catch (error) {
-		spinner.fail(chalk.white("Authentication failed"));
-		throw error;
-	}
+	// Generate state parameter for CSRF protection
+	const state = crypto.randomBytes(16).toString("hex");
+
+	// Build authorization URL
+	const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+		OAUTH_CALLBACK_URL,
+	)}&response_type=code&scope=${encodeURIComponent(
+		"user:read project:read project:write customer:read customer:write extension:read extension:write",
+	)}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
+
+	// Open browser
+	await open(authUrl);
+
+	// Wait for auth code
+	const authCode = await authCodePromise;
+
+	// Exchange code for tokens
+	const tokenResponse = await exchangeCodeForToken(authCode, verifier);
+
+	// Save tokens
+	await saveAuthConfig({
+		accessToken: tokenResponse.access_token,
+	});
 }
