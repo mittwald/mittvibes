@@ -34,7 +34,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm build
+        run: cd cli && pnpm build
 
       - name: Lint
         run: pnpm lint
