@@ -6,17 +6,20 @@
 		"useIgnoreFile": false
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": ["**", "!templates", "!cli/dist", "!.claude"]
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"includes": ["**", "!templates", "!cli/dist", "!.claude"]
 	},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true
-		}
+		},
+		"includes": ["**", "!templates", "!cli/dist", "!.claude"]
 	},
 	"javascript": {
 		"formatter": {
