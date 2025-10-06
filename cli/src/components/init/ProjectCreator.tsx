@@ -1,11 +1,94 @@
 import { Box, Text } from "ink";
 import type React from "react";
 import { useEffect, useState } from "react";
+import fs from "fs-extra";
+import path from "node:path";
+import { createWriteStream } from "node:fs";
+import { pipeline } from "node:stream";
+import { promisify } from "node:util";
+import fetch from "node-fetch";
+import yauzl from "yauzl";
+
+const pipelineAsync = promisify(pipeline);
 
 interface ProjectCreatorProps {
 	projectName: string;
 	onComplete: () => void;
 	onError: (error: string) => void;
+}
+
+async function downloadAndExtractTemplate(projectName: string): Promise<string> {
+	const tempDir = path.join(process.cwd(), `${projectName}-temp`);
+	const zipPath = path.join(tempDir, "repo.zip");
+
+	await fs.ensureDir(tempDir);
+
+	try {
+		const response = await fetch(
+			"https://github.com/weissaufschwarz/mittvibes/archive/refs/heads/main.zip",
+		);
+		if (!response.ok) {
+			throw new Error(`Failed to download template: ${response.statusText}`);
+		}
+
+		if (!response.body) {
+			throw new Error("No response body received");
+		}
+
+		await pipelineAsync(response.body, createWriteStream(zipPath));
+
+		return new Promise<string>((resolve, reject) => {
+			yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
+				if (err || !zipfile) {
+					reject(err || new Error("Failed to open ZIP file"));
+					return;
+				}
+
+				zipfile.readEntry();
+				zipfile.on("entry", (entry) => {
+					if (entry.fileName.startsWith("mittvibes-main/templates/")) {
+						const relativePath = entry.fileName.replace(
+							"mittvibes-main/templates/",
+							"",
+						);
+
+						if (relativePath && !entry.fileName.endsWith("/")) {
+							const outputPath = path.join(tempDir, "extracted", relativePath);
+
+							fs.ensureDirSync(path.dirname(outputPath));
+
+							zipfile.openReadStream(entry, (err, readStream) => {
+								if (err || !readStream) {
+									reject(err || new Error("Failed to read ZIP entry"));
+									return;
+								}
+
+								const writeStream = createWriteStream(outputPath);
+								readStream.pipe(writeStream);
+								writeStream.on("close", () => {
+									zipfile.readEntry();
+								});
+							});
+						} else {
+							zipfile.readEntry();
+						}
+					} else {
+						zipfile.readEntry();
+					}
+				});
+
+				zipfile.on("end", () => {
+					resolve(path.join(tempDir, "extracted"));
+				});
+
+				zipfile.on("error", reject);
+			});
+		});
+	} finally {
+		if (await fs.pathExists(zipPath)) {
+			await fs.remove(zipPath);
+		}
+	}
 }
 
 export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
@@ -19,24 +102,45 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 
 	useEffect(() => {
 		const createProject = async () => {
-			// Simulate the project creation process
-			setStatus("downloading");
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+			try {
+				const projectPath = path.join(process.cwd(), projectName);
 
-			setStatus("extracting");
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+				if (await fs.pathExists(projectPath)) {
+					throw new Error(
+						`Directory "${projectName}" already exists in current location`,
+					);
+				}
 
-			setStatus("updating");
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+				setStatus("downloading");
+				const extractedPath = await downloadAndExtractTemplate(projectName);
 
-			setStatus("completed");
-			onComplete();
+				setStatus("extracting");
+				await fs.copy(extractedPath, projectPath, {
+					filter: (src) =>
+						!src.includes("node_modules") && !src.includes(".git"),
+				});
+
+				await fs.remove(path.join(process.cwd(), `${projectName}-temp`));
+
+				setStatus("updating");
+				const packageJsonPath = path.join(projectPath, "package.json");
+				const packageJson = await fs.readJson(packageJsonPath);
+				packageJson.name = projectName;
+				await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+
+				setStatus("completed");
+				onComplete();
+			} catch (error) {
+				const tempDir = path.join(process.cwd(), `${projectName}-temp`);
+				if (await fs.pathExists(tempDir)) {
+					await fs.remove(tempDir);
+				}
+				onError(error instanceof Error ? error.message : String(error));
+			}
 		};
 
-		createProject().catch((error) => {
-			onError(error instanceof Error ? error.message : String(error));
-		});
-	}, [onComplete, onError]);
+		createProject();
+	}, [projectName, onComplete, onError]);
 
 	const getStatusText = () => {
 		switch (status) {

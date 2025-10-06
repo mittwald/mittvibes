@@ -3,6 +3,8 @@ import SelectInput from "ink-select-input";
 import TextInput from "ink-text-input";
 import type React from "react";
 import { useState } from "react";
+import { execSync } from "node:child_process";
+import path from "node:path";
 
 interface DatabaseSetupProps {
 	projectName: string;
@@ -17,11 +19,22 @@ interface DatabaseSetupProps {
 	}) => void;
 }
 
-type DatabaseState = "askSetup" | "enterUrl" | "askMigration" | "completed";
+type DatabaseState =
+	| "askSetup"
+	| "enterUrl"
+	| "askMigration"
+	| "runningMigration"
+	| "migrationError"
+	| "completed";
 
-export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({ onComplete }) => {
+export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
+	projectName,
+	installDeps,
+	onComplete,
+}) => {
 	const [state, setState] = useState<DatabaseState>("askSetup");
 	const [databaseUrl, setDatabaseUrl] = useState("");
+	const [migrationError, setMigrationError] = useState("");
 
 	const setupOptions = [
 		{ label: "Yes, configure PostgreSQL database now", value: "yes" },
@@ -50,12 +63,42 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({ onComplete }) => {
 		}
 	};
 
-	const handleMigrationChoice = (item: { value: string }) => {
-		onComplete({
-			setupDatabase: true,
-			databaseUrl,
-			runMigration: item.value === "yes",
-		});
+	const handleMigrationChoice = async (item: { value: string }) => {
+		const shouldRunMigration = item.value === "yes";
+
+		if (shouldRunMigration && installDeps) {
+			setState("runningMigration");
+			try {
+				const projectPath = path.join(process.cwd(), projectName);
+
+				// Generate Prisma client
+				execSync("pnpm db:generate", {
+					cwd: projectPath,
+					stdio: "inherit",
+				});
+
+				// Run migration
+				execSync("pnpm db:migrate:deploy", {
+					cwd: projectPath,
+					stdio: "inherit",
+				});
+
+				onComplete({
+					setupDatabase: true,
+					databaseUrl,
+					runMigration: true,
+				});
+			} catch (err) {
+				setMigrationError(err instanceof Error ? err.message : String(err));
+				setState("migrationError");
+			}
+		} else {
+			onComplete({
+				setupDatabase: true,
+				databaseUrl,
+				runMigration: shouldRunMigration,
+			});
+		}
 	};
 
 	const renderContent = () => {
@@ -105,6 +148,32 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({ onComplete }) => {
 								items={migrationOptions}
 								onSelect={handleMigrationChoice}
 							/>
+						</Box>
+					</Box>
+				);
+
+			case "runningMigration":
+				return (
+					<Box flexDirection="column">
+						<Text color="yellow">🔄 Running database migration...</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Generating Prisma client...</Text>
+						</Box>
+					</Box>
+				);
+
+			case "migrationError":
+				return (
+					<Box flexDirection="column">
+						<Text color="red">❌ Migration failed</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Error: {migrationError}</Text>
+						</Box>
+						<Box marginTop={1}>
+							<Text color="gray">
+								Please run migrations manually: pnpm db:generate && pnpm
+								db:migrate:deploy
+							</Text>
 						</Box>
 					</Box>
 				);

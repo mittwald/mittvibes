@@ -24,6 +24,9 @@ export interface ProjectConfig {
 	selectedCustomerId?: string;
 	extensionId?: string;
 	extensionSecret?: string;
+	extensionName?: string;
+	frontendUrl?: string;
+	webhookUrl?: string;
 }
 
 type InitStep =
@@ -180,13 +183,18 @@ export const InitCommand: React.FC = () => {
 				);
 
 			case "extension":
-				if (!config.projectName || !config.extensionContext) {
+				if (
+					!config.projectName ||
+					!config.extensionContext ||
+					!config.selectedCustomerId
+				) {
 					return <Text color="red">Error: Required configuration missing</Text>;
 				}
 				return (
 					<ExtensionSetup
 						projectName={config.projectName}
 						extensionContext={config.extensionContext}
+						selectedCustomerId={config.selectedCustomerId}
 						onComplete={(extensionConfig) => {
 							updateConfig(extensionConfig);
 							nextStep();

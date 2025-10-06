@@ -165,6 +165,103 @@ export async function getProjects(): Promise<Project[]> {
 	}
 }
 
+// Create a new extension for a contributor
+export async function createExtension(params: {
+	contributorId: string;
+	name: string;
+	context: "customer" | "project";
+	description?: string;
+	webhookUrl?: string;
+	frontendUrl?: string;
+}): Promise<{ extensionId: string; extensionSecret: string }> {
+	try {
+		const client = await createAPIClient();
+
+		// Use placeholder URL if not provided - users can update in mStudio later
+		const frontendUrlToUse =
+			params.frontendUrl || "https://example.com/configure-your-extension-url";
+
+		const requestData = {
+			name: params.name,
+			context: params.context,
+			description: params.description || `${params.name} extension`,
+			scopes: [], // Empty for now as requested
+			frontendFragments: {
+				anchor: {
+					url: frontendUrlToUse,
+				},
+			},
+			...(params.webhookUrl && {
+				webhookUrls: {
+					extensionAddedToContext: { url: params.webhookUrl },
+					extensionInstanceRemovedFromContext: { url: params.webhookUrl },
+					extensionInstanceSecretRotated: { url: params.webhookUrl },
+					extensionInstanceUpdated: { url: params.webhookUrl },
+				},
+			}),
+		};
+
+		console.log(
+			"[DEBUG] Creating extension with data:",
+			JSON.stringify(requestData, null, 2),
+		);
+		console.log("[DEBUG] Contributor ID:", params.contributorId);
+
+		const response = await client.marketplace.extensionRegisterExtension({
+			contributorId: params.contributorId,
+			data: requestData,
+		});
+
+		console.log("[DEBUG] Response status:", response.status);
+		console.log(
+			"[DEBUG] Response data:",
+			JSON.stringify(response.data, null, 2),
+		);
+
+		assertStatus(response, 201);
+
+		// Extract extension ID from response
+		const extensionId = response.data.id;
+
+		// Wait 5 seconds for the extension to be fully created in the system
+		await new Promise((resolve) => setTimeout(resolve, 5000));
+
+		// Try to generate extension secret via API, fallback to local generation
+		let extensionSecret: string;
+		try {
+			const secretResponse =
+				await client.marketplace.extensionGenerateExtensionSecret({
+					contributorId: params.contributorId,
+					extensionId: extensionId,
+				});
+
+			assertStatus(secretResponse, 200);
+			extensionSecret = secretResponse.data.secret;
+			console.log("[DEBUG] Extension secret generated via API");
+		} catch (error) {
+			// If API secret generation fails (403), generate locally
+			console.warn(
+				"[DEBUG] API secret generation failed, using local generation:",
+				error instanceof Error ? error.message : error,
+			);
+			const { generateKey } = await import("@47ng/cloak");
+			extensionSecret = generateKey();
+			console.log(
+				"[DEBUG] Extension secret generated locally - you'll need to add it manually in mStudio",
+			);
+		}
+
+		return { extensionId, extensionSecret };
+	} catch (error) {
+		console.error("[DEBUG] Full error:", error);
+		throw new Error(
+			`Failed to create extension: ${
+				error instanceof Error ? error.message : error
+			}`,
+		);
+	}
+}
+
 // Install an extension in a customer or project context
 export async function installExtension(
 	installData: ExtensionInstallData,
