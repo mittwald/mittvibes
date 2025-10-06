@@ -22,7 +22,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
 					const projectPath = path.join(process.cwd(), config.projectName);
 					const envPath = path.join(projectPath, ".env");
 
-					// Generate Prisma encryption key
+					// Generate Prisma encryption key (separate from extension secret)
 					const prismaKey = generateKey();
 
 					const envContent = `# Database
@@ -30,15 +30,8 @@ ${config.setupDatabase && config.databaseUrl ? `DATABASE_URL="${config.databaseU
 PRISMA_FIELD_ENCRYPTION_KEY="${prismaKey}"
 
 # mittwald Extension
-EXTENSION_ID=${config.extensionId || "REPLACE_ME"}
-EXTENSION_SECRET=${config.extensionSecret || generateKey()}
-
-# mittwald Organization
-MITTWALD_CUSTOMER_ID=${config.selectedCustomerId || ""}
-
-# Extension Context
-EXTENSION_CONTEXT=${config.extensionContext}
-EXTENSION_CONTEXT_ID=${config.selectedContextId || ""}
+EXTENSION_ID=${config.extensionId}
+EXTENSION_SECRET=${config.extensionSecret}
 
 NODE_ENV=development
 `;

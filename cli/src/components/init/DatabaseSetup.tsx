@@ -5,6 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { execSync } from "node:child_process";
 import path from "node:path";
+import fs from "fs-extra";
 
 interface DatabaseSetupProps {
 	projectName: string;
@@ -70,6 +71,27 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 			setState("runningMigration");
 			try {
 				const projectPath = path.join(process.cwd(), projectName);
+				const envPath = path.join(projectPath, ".env");
+
+				// Write DATABASE_URL to .env file before running migration
+				const existingEnv = await fs.pathExists(envPath)
+					? await fs.readFile(envPath, "utf-8")
+					: "";
+
+				// Update or add DATABASE_URL
+				const lines = existingEnv.split("\n");
+				const dbUrlIndex = lines.findIndex((line) =>
+					line.startsWith("DATABASE_URL="),
+				);
+
+				if (dbUrlIndex >= 0) {
+					lines[dbUrlIndex] = `DATABASE_URL="${databaseUrl}"`;
+				} else {
+					// Add at the beginning
+					lines.unshift(`DATABASE_URL="${databaseUrl}"`);
+				}
+
+				await fs.writeFile(envPath, lines.join("\n"));
 
 				// Generate Prisma client
 				execSync("pnpm db:generate", {
@@ -77,10 +99,11 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 					stdio: "inherit",
 				});
 
-				// Run migration
+				// Run migration - capture output for error debugging
 				execSync("pnpm db:migrate:deploy", {
 					cwd: projectPath,
-					stdio: "inherit",
+					stdio: "pipe",
+					encoding: "utf-8",
 				});
 
 				onComplete({
@@ -88,8 +111,19 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 					databaseUrl,
 					runMigration: true,
 				});
-			} catch (err) {
-				setMigrationError(err instanceof Error ? err.message : String(err));
+			} catch (err: any) {
+				let errorMessage = "Unknown error";
+				if (err instanceof Error) {
+					errorMessage = err.message;
+				}
+				// Capture stderr/stdout from execSync
+				if (err.stderr) {
+					errorMessage += `\n\nStderr:\n${err.stderr.toString()}`;
+				}
+				if (err.stdout) {
+					errorMessage += `\n\nStdout:\n${err.stdout.toString()}`;
+				}
+				setMigrationError(errorMessage);
 				setState("migrationError");
 			}
 		} else {
@@ -126,6 +160,7 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 								onChange={setDatabaseUrl}
 								onSubmit={handleUrlSubmit}
 								placeholder="postgresql://user:password@host:port/database"
+								highlightPastedText={true}
 							/>
 						</Box>
 						<Box marginTop={1}>

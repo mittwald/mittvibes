@@ -226,30 +226,16 @@ export async function createExtension(params: {
 		// Wait 5 seconds for the extension to be fully created in the system
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 
-		// Try to generate extension secret via API, fallback to local generation
-		let extensionSecret: string;
-		try {
-			const secretResponse =
-				await client.marketplace.extensionGenerateExtensionSecret({
-					contributorId: params.contributorId,
-					extensionId: extensionId,
-				});
+		// Generate extension secret via API
+		const secretResponse =
+			await client.marketplace.extensionGenerateExtensionSecret({
+				contributorId: params.contributorId,
+				extensionId: extensionId,
+			});
 
-			assertStatus(secretResponse, 200);
-			extensionSecret = secretResponse.data.secret;
-			console.log("[DEBUG] Extension secret generated via API");
-		} catch (error) {
-			// If API secret generation fails (403), generate locally
-			console.warn(
-				"[DEBUG] API secret generation failed, using local generation:",
-				error instanceof Error ? error.message : error,
-			);
-			const { generateKey } = await import("@47ng/cloak");
-			extensionSecret = generateKey();
-			console.log(
-				"[DEBUG] Extension secret generated locally - you'll need to add it manually in mStudio",
-			);
-		}
+		assertStatus(secretResponse, 200);
+		const extensionSecret = secretResponse.data.secret;
+		console.log("[DEBUG] Extension secret generated via API");
 
 		return { extensionId, extensionSecret };
 	} catch (error) {
