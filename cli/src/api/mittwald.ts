@@ -204,9 +204,11 @@ export async function createExtension(params: {
 	try {
 		const client = await createAPIClient();
 
-		// Use placeholder URL if not provided - users can update in mStudio later
-		const frontendUrlToUse =
-			params.frontendUrl || "https://example.com/configure-your-extension-url";
+		// Use context-specific path for frontendFragments
+		const fragmentPath =
+			params.context === "customer"
+				? "/customers/customer/menu/section/extensions/item"
+				: "/projects/project/menu/section/extensions/item";
 
 		const requestData = {
 			name: params.name,
@@ -214,8 +216,8 @@ export async function createExtension(params: {
 			description: params.description || `${params.name} extension`,
 			scopes: [], // Empty for now as requested
 			frontendFragments: {
-				anchor: {
-					url: frontendUrlToUse,
+				[fragmentPath]: {
+					url: params.frontendUrl || "http://localhost:5173",
 				},
 			},
 			...(params.webhookUrl && {
