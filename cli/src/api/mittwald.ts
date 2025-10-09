@@ -165,6 +165,33 @@ export async function getProjects(): Promise<Project[]> {
 	}
 }
 
+// Get all projects for a specific customer
+export async function getProjectsByCustomer(
+	customerId: string,
+): Promise<Project[]> {
+	try {
+		const client = await createAPIClient();
+		const response = await client.project.listProjects({
+			queryParameters: {
+				customerId,
+			},
+		});
+		assertStatus(response, 200);
+
+		return response.data.map((project) => ({
+			id: project.id,
+			description: project.description || "",
+			createdAt: project.createdAt,
+		}));
+	} catch (error) {
+		throw new Error(
+			`Failed to fetch projects for customer: ${
+				error instanceof Error ? error.message : error
+			}`,
+		);
+	}
+}
+
 // Create a new extension for a contributor
 export async function createExtension(params: {
 	contributorId: string;
@@ -201,22 +228,10 @@ export async function createExtension(params: {
 			}),
 		};
 
-		console.log(
-			"[DEBUG] Creating extension with data:",
-			JSON.stringify(requestData, null, 2),
-		);
-		console.log("[DEBUG] Contributor ID:", params.contributorId);
-
 		const response = await client.marketplace.extensionRegisterExtension({
 			contributorId: params.contributorId,
 			data: requestData,
 		});
-
-		console.log("[DEBUG] Response status:", response.status);
-		console.log(
-			"[DEBUG] Response data:",
-			JSON.stringify(response.data, null, 2),
-		);
 
 		assertStatus(response, 201);
 
@@ -257,29 +272,39 @@ export async function installExtension(
 	try {
 		const client = await createAPIClient();
 
+		// Wait 5 seconds for the extension to be fully ready in the system
+		console.log("[DEBUG] Waiting 5 seconds before installation...");
+		await new Promise((resolve) => setTimeout(resolve, 5000));
+
 		if (installData.projectId) {
 			// Install in project context
+			const requestData = {
+				context: "project" as const,
+				contextId: installData.projectId,
+				extensionId: installData.extensionId,
+				consentedScopes: [], // Empty for now as requested
+			};
+
 			const response =
 				await client.marketplace.extensionCreateExtensionInstance({
-					data: {
-						context: "project" as const,
-						contextId: installData.projectId,
-						extensionId: installData.extensionId,
-						consentedScopes: [], // Empty for now as requested
-					},
+					data: requestData,
 				});
+
 			assertStatus(response, 201);
 		} else if (installData.customerId) {
 			// Install in customer context
+			const requestData = {
+				context: "customer" as const,
+				contextId: installData.customerId,
+				extensionId: installData.extensionId,
+				consentedScopes: [], // Empty for now as requested
+			};
+
 			const response =
 				await client.marketplace.extensionCreateExtensionInstance({
-					data: {
-						context: "customer" as const,
-						contextId: installData.customerId,
-						extensionId: installData.extensionId,
-						consentedScopes: [], // Empty for now as requested
-					},
+					data: requestData,
 				});
+
 			assertStatus(response, 201);
 		} else {
 			throw new Error("Either customerId or projectId must be provided");

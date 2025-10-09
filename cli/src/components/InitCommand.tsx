@@ -6,13 +6,12 @@ import { ContextSelector } from "./init/ContextSelector.js";
 import { DatabaseSetup } from "./init/DatabaseSetup.js";
 import { DependencyInstaller } from "./init/DependencyInstaller.js";
 import { ExtensionSetup } from "./init/ExtensionSetup.js";
+import { InstallationSetup } from "./init/InstallationSetup.js";
 import { OrganizationSelector } from "./init/OrganizationSelector.js";
 import { ProjectCreator } from "./init/ProjectCreator.js";
-import { ProjectModeSelector } from "./init/ProjectModeSelector.js";
 import { ProjectNameInput } from "./init/ProjectNameInput.js";
 
 export interface ProjectConfig {
-	mode: "new" | "existing";
 	projectName: string;
 	installDeps: boolean;
 	setupDatabase: boolean;
@@ -27,17 +26,20 @@ export interface ProjectConfig {
 	extensionName?: string;
 	frontendUrl?: string;
 	webhookUrl?: string;
+	installedInContext?: string;
+	installedInCustomer?: string;
+	installedInProject?: string;
 }
 
 type InitStep =
 	| "organization"
 	| "context"
-	| "mode"
 	| "projectName"
 	| "creating"
 	| "dependencies"
 	| "database"
 	| "extension"
+	| "installation"
 	| "completed";
 
 export const InitCommand: React.FC = () => {
@@ -54,14 +56,7 @@ export const InitCommand: React.FC = () => {
 				setCurrentStep("context");
 				break;
 			case "context":
-				setCurrentStep("mode");
-				break;
-			case "mode":
-				if (config.mode === "existing") {
-					setCurrentStep("completed");
-				} else {
-					setCurrentStep("projectName");
-				}
+				setCurrentStep("projectName");
 				break;
 			case "projectName":
 				setCurrentStep("creating");
@@ -76,6 +71,9 @@ export const InitCommand: React.FC = () => {
 				setCurrentStep("extension");
 				break;
 			case "extension":
+				setCurrentStep("installation");
+				break;
+			case "installation":
 				setCurrentStep("completed");
 				break;
 		}
@@ -104,16 +102,6 @@ export const InitCommand: React.FC = () => {
 								extensionContext: data.extensionContext,
 								selectedContextId: data.selectedContextId,
 							});
-							nextStep();
-						}}
-					/>
-				);
-
-			case "mode":
-				return (
-					<ProjectModeSelector
-						onSelect={(mode) => {
-							updateConfig({ mode });
 							nextStep();
 						}}
 					/>
@@ -197,6 +185,22 @@ export const InitCommand: React.FC = () => {
 						selectedCustomerId={config.selectedCustomerId}
 						onComplete={(extensionConfig) => {
 							updateConfig(extensionConfig);
+							nextStep();
+						}}
+					/>
+				);
+
+			case "installation":
+				if (!config.extensionId || !config.extensionContext) {
+					return <Text color="red">Error: Extension not configured</Text>;
+				}
+				return (
+					<InstallationSetup
+						extensionId={config.extensionId}
+						extensionContext={config.extensionContext}
+						selectedCustomerId={config.selectedCustomerId}
+						onComplete={(installData) => {
+							updateConfig(installData);
 							nextStep();
 						}}
 					/>

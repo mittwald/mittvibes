@@ -16,7 +16,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
 	const [envWritten, setEnvWritten] = useState(false);
 
 	useEffect(() => {
-		if (config.mode === "new" && config.projectName && !envWritten) {
+		if (config.projectName && !envWritten) {
 			const writeEnvFile = async () => {
 				try {
 					const projectPath = path.join(process.cwd(), config.projectName);
@@ -46,17 +46,6 @@ NODE_ENV=development
 			writeEnvFile();
 		}
 	}, [config, envWritten]);
-
-	if (config.mode === "existing") {
-		return (
-			<Box flexDirection="column">
-				<Text>
-					📁 Please navigate to your existing project directory and continue
-					from there.
-				</Text>
-			</Box>
-		);
-	}
 
 	return (
 		<Box flexDirection="column">
@@ -129,6 +118,20 @@ NODE_ENV=development
 				<Text color="white"> • Scopes: </Text>
 				<Text color="green">Empty ✓</Text>
 			</Box>
+			{config.installedInContext && (
+				<Box>
+					<Text color="white"> • Installed in: </Text>
+					<Text color="green">
+						{config.installedInContext}{" "}
+						{config.installedInProject
+							? `(project: ${config.installedInProject})`
+							: config.installedInCustomer
+								? `(customer: ${config.installedInCustomer})`
+								: ""}{" "}
+						✓
+					</Text>
+				</Box>
+			)}
 			{config.frontendUrl && (
 				<Box>
 					<Text color="white"> • Frontend URL: </Text>

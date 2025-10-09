@@ -128,6 +128,16 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 				packageJson.name = projectName;
 				await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 
+				// Recreate CLAUDE.md symlink (GitHub ZIP doesn't preserve symlinks)
+				const claudeMdPath = path.join(projectPath, "CLAUDE.md");
+				const agentsMdPath = path.join(projectPath, "AGENTS.md");
+				if (await fs.pathExists(claudeMdPath)) {
+					await fs.remove(claudeMdPath);
+				}
+				if (await fs.pathExists(agentsMdPath)) {
+					await fs.symlink("AGENTS.md", claudeMdPath);
+				}
+
 				setStatus("completed");
 				onComplete();
 			} catch (error) {

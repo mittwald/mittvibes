@@ -32,9 +32,7 @@ export const ExtensionSetup: React.FC<ExtensionSetupProps> = ({
 	onComplete,
 }) => {
 	const [state, setState] = useState<SetupState>("extensionName");
-	const [extensionName, setExtensionName] = useState(
-		`${projectName}-extension`,
-	);
+	const [extensionName, setExtensionName] = useState(projectName);
 	const [frontendUrl, setFrontendUrl] = useState("");
 	const [webhookUrl, setWebhookUrl] = useState("");
 	const [createdExtensionId, setCreatedExtensionId] = useState("");

@@ -1,3 +1,4 @@
 node_modules
 cli/dist
 cli/my-mittwald-extension
+.DS_Store
