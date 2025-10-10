@@ -1,9 +1,9 @@
+import path from "node:path";
+import { generateKey } from "@47ng/cloak";
+import fs from "fs-extra";
 import { Box, Text } from "ink";
 import type React from "react";
 import { useEffect, useState } from "react";
-import fs from "fs-extra";
-import path from "node:path";
-import { generateKey } from "@47ng/cloak";
 import type { ProjectConfig } from "../InitCommand.js";
 
 interface CompletionScreenProps {

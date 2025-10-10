@@ -1,12 +1,12 @@
-import { Box, Text } from "ink";
-import type React from "react";
-import { useEffect, useState } from "react";
-import fs from "fs-extra";
-import path from "node:path";
 import { createWriteStream } from "node:fs";
+import path from "node:path";
 import { pipeline } from "node:stream";
 import { promisify } from "node:util";
+import fs from "fs-extra";
+import { Box, Text } from "ink";
 import fetch from "node-fetch";
+import type React from "react";
+import { useEffect, useState } from "react";
 import yauzl from "yauzl";
 
 const pipelineAsync = promisify(pipeline);
@@ -17,7 +17,9 @@ interface ProjectCreatorProps {
 	onError: (error: string) => void;
 }
 
-async function downloadAndExtractTemplate(projectName: string): Promise<string> {
+async function downloadAndExtractTemplate(
+	projectName: string,
+): Promise<string> {
 	const tempDir = path.join(process.cwd(), `${projectName}-temp`);
 	const zipPath = path.join(tempDir, "repo.zip");
 

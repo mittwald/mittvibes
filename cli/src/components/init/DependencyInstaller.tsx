@@ -1,9 +1,9 @@
+import { execSync } from "node:child_process";
+import path from "node:path";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
 import type React from "react";
 import { useState } from "react";
-import { execSync } from "node:child_process";
-import path from "node:path";
 
 interface DependencyInstallerProps {
 	projectName: string;

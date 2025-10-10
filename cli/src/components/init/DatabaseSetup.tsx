@@ -1,11 +1,11 @@
+import { execSync } from "node:child_process";
+import path from "node:path";
+import fs from "fs-extra";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
 import TextInput from "ink-text-input";
 import type React from "react";
 import { useState } from "react";
-import { execSync } from "node:child_process";
-import path from "node:path";
-import fs from "fs-extra";
 
 interface DatabaseSetupProps {
 	projectName: string;
@@ -74,7 +74,7 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 				const envPath = path.join(projectPath, ".env");
 
 				// Write DATABASE_URL to .env file before running migration
-				const existingEnv = await fs.pathExists(envPath)
+				const existingEnv = (await fs.pathExists(envPath))
 					? await fs.readFile(envPath, "utf-8")
 					: "";
 
@@ -111,17 +111,17 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 					databaseUrl,
 					runMigration: true,
 				});
-			} catch (err: any) {
+			} catch (err: unknown) {
 				let errorMessage = "Unknown error";
 				if (err instanceof Error) {
 					errorMessage = err.message;
 				}
 				// Capture stderr/stdout from execSync
-				if (err.stderr) {
-					errorMessage += `\n\nStderr:\n${err.stderr.toString()}`;
+				if (err && typeof err === "object" && "stderr" in err) {
+					errorMessage += `\n\nStderr:\n${String(err.stderr)}`;
 				}
-				if (err.stdout) {
-					errorMessage += `\n\nStdout:\n${err.stdout.toString()}`;
+				if (err && typeof err === "object" && "stdout" in err) {
+					errorMessage += `\n\nStdout:\n${String(err.stdout)}`;
 				}
 				setMigrationError(errorMessage);
 				setState("migrationError");
