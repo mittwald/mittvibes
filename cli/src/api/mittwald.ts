@@ -271,7 +271,6 @@ export async function installExtension(
 		const client = await createAPIClient();
 
 		// Wait 5 seconds for the extension to be fully ready in the system
-		console.log("[DEBUG] Waiting 5 seconds before installation...");
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 
 		if (installData.projectId) {
