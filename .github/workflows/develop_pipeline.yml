@@ -39,7 +39,7 @@ jobs:
 
       - name: Build
         working-directory: cli
-        run: pnpm build --ignore-workspace
+        run: pnpm exec tsc
 
       - name: Lint
         run: pnpm lint
