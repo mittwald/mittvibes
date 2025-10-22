@@ -38,7 +38,8 @@ jobs:
         run: pnpm install --ignore-workspace
 
       - name: Build
-        run: cd cli && pnpm build
+        working-directory: cli
+        run: pnpm build --ignore-workspace
 
       - name: Lint
         run: pnpm lint
