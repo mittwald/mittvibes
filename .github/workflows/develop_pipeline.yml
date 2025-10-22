@@ -34,12 +34,10 @@ jobs:
         run: pnpm install
 
       - name: Install dependencies for cli
-        working-directory: cli
-        run: pnpm install --ignore-workspace
+        run: cd cli && pnpm install
 
       - name: Build
-        working-directory: cli
-        run: pnpm exec tsc
+        run: cd cli && pnpm build
 
       - name: Lint
         run: pnpm lint

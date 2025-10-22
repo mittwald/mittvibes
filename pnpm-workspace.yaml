@@ -1,0 +1,2 @@
+# This is not a monorepo - cli is a separate standalone project
+packages: []
