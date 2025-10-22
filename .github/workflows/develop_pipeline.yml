@@ -34,7 +34,8 @@ jobs:
         run: pnpm install
 
       - name: Install dependencies for cli
-        run: cd cli && pnpm install
+        working-directory: cli
+        run: pnpm install --ignore-workspace
 
       - name: Build
         run: cd cli && pnpm build
