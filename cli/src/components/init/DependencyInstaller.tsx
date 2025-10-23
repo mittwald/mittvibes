@@ -1,3 +1,5 @@
+import { execSync } from "node:child_process";
+import path from "node:path";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
 import type React from "react";
@@ -9,9 +11,11 @@ interface DependencyInstallerProps {
 }
 
 export const DependencyInstaller: React.FC<DependencyInstallerProps> = ({
+	projectName,
 	onComplete,
 }) => {
 	const [installing, setInstalling] = useState(false);
+	const [error, setError] = useState("");
 
 	const dependencyOptions = [
 		{ label: "Yes, install dependencies now (pnpm install)", value: "yes" },
@@ -23,12 +27,37 @@ export const DependencyInstaller: React.FC<DependencyInstallerProps> = ({
 
 		if (shouldInstall) {
 			setInstalling(true);
-			// Simulate installation
-			await new Promise((resolve) => setTimeout(resolve, 3000));
+			try {
+				const projectPath = path.join(process.cwd(), projectName);
+				execSync("pnpm install", {
+					cwd: projectPath,
+					stdio: "inherit",
+				});
+				onComplete(true);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : String(err));
+				onComplete(false);
+			}
+		} else {
+			onComplete(false);
 		}
-
-		onComplete(shouldInstall);
 	};
+
+	if (error) {
+		return (
+			<Box flexDirection="column">
+				<Text color="red">❌ Failed to install dependencies</Text>
+				<Box marginTop={1}>
+					<Text color="gray">Error: {error}</Text>
+				</Box>
+				<Box marginTop={1}>
+					<Text color="gray">
+						Please run "pnpm install" manually in your project directory.
+					</Text>
+				</Box>
+			</Box>
+		);
+	}
 
 	if (installing) {
 		return (
