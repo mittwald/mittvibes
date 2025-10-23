@@ -167,6 +167,13 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 				packageJson.name = finalProjectName;
 				await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 
+				// Rename _gitignore to .gitignore (can't include .gitignore in npm packages)
+				const gitignoreSource = path.join(projectPath, "_gitignore");
+				const gitignoreDest = path.join(projectPath, ".gitignore");
+				if (await fs.pathExists(gitignoreSource)) {
+					await fs.rename(gitignoreSource, gitignoreDest);
+				}
+
 				// Recreate CLAUDE.md symlink (GitHub ZIP doesn't preserve symlinks)
 				const claudeMdPath = path.join(projectPath, "CLAUDE.md");
 				const agentsMdPath = path.join(projectPath, "AGENTS.md");
