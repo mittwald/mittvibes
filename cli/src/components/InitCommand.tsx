@@ -124,7 +124,11 @@ export const InitCommand: React.FC = () => {
 				return (
 					<ProjectCreator
 						projectName={config.projectName}
-						onComplete={() => nextStep()}
+						onComplete={(actualFolderName) => {
+							// Update config with the actual folder name used (in case it was renamed)
+							updateConfig({ projectName: actualFolderName });
+							nextStep();
+						}}
 						onError={(error) => {
 							console.error("Project creation failed:", error);
 							process.exit(1);
