@@ -141,16 +141,9 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 					🔐 mittwald Authentication
 				</Text>
 				<Box marginTop={1}>
-					<Text color="white">Copy this URL to authenticate:</Text>
+					<Text color="gray">Copy this URL to authenticate:</Text>
 				</Box>
-				<Box
-					marginTop={1}
-					marginBottom={1}
-					paddingX={2}
-					paddingY={1}
-					borderStyle="single"
-					borderColor="gray"
-				>
+				<Box marginTop={1} marginBottom={1}>
 					<Text color="cyan">{oauthFlow?.authUrl}</Text>
 				</Box>
 				<Box marginTop={1}>
