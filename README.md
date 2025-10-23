@@ -46,7 +46,7 @@ The CLI will guide you through the complete setup process:
 1. **Organization Selection**: Choose which mittwald organization to use
 2. **Contributor Check**: Automatically verify contributor status
 3. **Interest Submission**: Submit contributor interest if needed (via API)
-4. **Extension Context Selection**: Choose between customer-level or project-level extensions
+4. **Extension Context Selection**: Choose between organization-level or project-level extensions
 5. **Project Selection**: Select specific project for project-level extensions
 6. **Project Configuration**: Choose project name and directory
 7. **Dependency Installation**: Automatically install dependencies with pnpm
@@ -67,7 +67,7 @@ The CLI will guide you through the complete setup process:
 - **OAuth Authentication**: Secure PKCE-based authentication with mittwald
 - **Organization Management**: Select and manage mittwald organizations
 - **Contributor Status**: Automatic contributor verification and interest submission
-- **Extension Context Management**: Choose between customer-level and project-level extensions
+- **Extension Context Management**: Choose between organization-level and project-level extensions
 - **Project Integration**: Automatic project selection and configuration for project-level extensions
 - **Interactive CLI**: Step-by-step guided setup with visual indicators
 - **Automatic Secret Generation**: Auto-generated extension secrets using secure key generation

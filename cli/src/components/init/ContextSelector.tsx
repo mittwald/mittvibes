@@ -29,7 +29,7 @@ export const ContextSelector: React.FC<ContextSelectorProps> = ({
 
 	const contextItems = [
 		{
-			label: "Customer Level - Available in organization menu",
+			label: "Organization Level - Available in organization menu",
 			value: "customer",
 		},
 		{

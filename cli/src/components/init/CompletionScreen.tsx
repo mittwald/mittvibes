@@ -126,7 +126,7 @@ NODE_ENV=development
 						{config.installedInProject
 							? `(project: ${config.installedInProject})`
 							: config.installedInCustomer
-								? `(customer: ${config.installedInCustomer})`
+								? `(organization: ${config.installedInCustomer})`
 								: ""}{" "}
 						✓
 					</Text>
