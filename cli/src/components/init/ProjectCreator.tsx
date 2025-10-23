@@ -22,7 +22,7 @@ type ProjectCreationStatus =
 	| "updating"
 	| "completed";
 
-type ConflictResolution = "none" | "choose" | "rename" | "wipe";
+type ConflictResolution = "none" | "rename" | "wipe";
 
 interface ProjectCreatorProps {
 	projectName: string;
@@ -142,12 +142,16 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 				const projectPath = path.join(process.cwd(), finalProjectName);
 
 				// If wiping, remove existing folder
-				if (conflictResolution === "wipe" && (await fs.pathExists(projectPath))) {
+				if (
+					conflictResolution === "wipe" &&
+					(await fs.pathExists(projectPath))
+				) {
 					await fs.remove(projectPath);
 				}
 
 				setStatus("downloading");
-				const extractedPath = await downloadAndExtractTemplate(finalProjectName);
+				const extractedPath =
+					await downloadAndExtractTemplate(finalProjectName);
 
 				setStatus("extracting");
 				await fs.copy(extractedPath, projectPath, {
@@ -218,7 +222,8 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 				value: "rename",
 			},
 			{
-				label: "Delete existing folder and create new project",
+				label:
+					"Delete existing folder and create new project (⚠️  WARNING: Cannot be undone)",
 				value: "wipe",
 			},
 		];
