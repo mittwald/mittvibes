@@ -200,7 +200,14 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		};
 
 		createProject();
-	}, [status, projectName, newProjectName, conflictResolution, onComplete, onError]);
+	}, [
+		status,
+		projectName,
+		newProjectName,
+		conflictResolution,
+		onComplete,
+		onError,
+	]);
 
 	const getStatusText = () => {
 		switch (status) {
