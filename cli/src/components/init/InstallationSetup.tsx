@@ -55,7 +55,7 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 					setCustomers(customerList);
 				} catch (err) {
 					setError(
-						err instanceof Error ? err.message : "Failed to load customers",
+						err instanceof Error ? err.message : "Failed to load organizations",
 					);
 				}
 			};
@@ -160,7 +160,7 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 				<Box marginTop={1}>
 					<Text color="white">
 						Would you like to install this extension in a{" "}
-						{extensionContext === "customer" ? "customer" : "project"} now?
+						{extensionContext === "customer" ? "organization" : "project"} now?
 					</Text>
 				</Box>
 				<Box marginTop={1}>
@@ -187,7 +187,7 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 		if (customers.length === 0) {
 			return (
 				<Box flexDirection="column">
-					<Text color="white">Loading customers...</Text>
+					<Text color="white">Loading organizations...</Text>
 				</Box>
 			);
 		}
@@ -200,13 +200,13 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 		return (
 			<Box flexDirection="column">
 				<Text color="white" bold>
-					Select Customer
+					Select Organization
 				</Text>
 				<Box marginTop={1}>
 					<Text color="white">
 						{extensionContext === "customer"
-							? "Which customer should this extension be installed in?"
-							: "Which customer contains the project?"}
+							? "Which organization should this extension be installed in?"
+							: "Which organization contains the project?"}
 					</Text>
 				</Box>
 				<Box marginTop={1}>
@@ -238,7 +238,7 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 		// Find customer name for display
 		const customerName =
 			customers.find((c) => c.customerId === selectedInstallCustomer)?.name ||
-			"Selected Customer";
+			"Selected Organization";
 
 		const projectItems = projects.map((project) => ({
 			label: `${project.description || project.id}`,

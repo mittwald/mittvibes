@@ -32,7 +32,7 @@ export const ProjectNameInput: React.FC<ProjectNameInputProps> = ({
 
 	return (
 		<Box flexDirection="column">
-			<Text>What is the name of your extension project?</Text>
+			<Text>What is the name of your extension?</Text>
 			<Box marginTop={1}>
 				<Text color="gray">Name: </Text>
 				<TextInput
