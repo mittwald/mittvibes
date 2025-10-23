@@ -70,6 +70,19 @@ This is a mittwald extension project using React components and API integration 
 - Never make API calls directly from client components
 - Always use the session token from context for authentication
 
+### Context Management & Context-ID
+- **CRITICAL**: The `context.contextId` is provided by mittwald and determines the scope in which your extension operates
+- **Context Types**: The context-id can be either:
+  - **Organization-ID**: When the extension is operating in an organization context
+  - **Project-ID**: When the extension is operating in a project context
+- **Importance**: This ID is fundamental for understanding which resource scope your extension is working with
+- Always retrieve the context-id from the mittwald context object, never hardcode it
+
+**Best Practices**:
+- Always use `context.contextId` from the mittwald context
+- Never assume or hardcode organization/project IDs
+- The context-id determines which resources your extension has access to
+
 ### Authentication & Client Setup
 - **Token Exchange**: Use `getAccessToken()` to exchange session token for access token
 - **Client Creation**: Use `@mittwald/api-client` package's `MittwaldAPIV2Client.newWithToken()`
