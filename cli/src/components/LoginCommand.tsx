@@ -104,7 +104,9 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 							.catch((error) => {
 								flow.cleanup();
 								cleanup();
-								setError(error instanceof Error ? error.message : String(error));
+								setError(
+									error instanceof Error ? error.message : String(error),
+								);
 								setStatus("error");
 								setTimeout(() => {
 									process.exit(1);

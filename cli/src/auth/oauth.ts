@@ -236,7 +236,7 @@ export async function startOAuthFlow(): Promise<OAuthFlowResult> {
 			});
 		},
 		cleanup: () => {
-			if (server && server.listening) {
+			if (server?.listening) {
 				server.close();
 			}
 		},
