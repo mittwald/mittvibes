@@ -37,12 +37,14 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 						.openBrowser()
 						.then(() => oauthFlow.waitForCompletion())
 						.then(() => {
+							oauthFlow.cleanup();
 							setStatus("success");
 							if (onComplete) {
 								setTimeout(onComplete, 2000);
 							}
 						})
 						.catch((error) => {
+							oauthFlow.cleanup();
 							setError(error instanceof Error ? error.message : String(error));
 							setStatus("error");
 						});
@@ -74,6 +76,15 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 						const flow = await startOAuthFlow();
 						setOauthFlow(flow);
 						setStatus("showingUrl");
+
+						// Set up signal handlers for graceful cleanup
+						const cleanupHandler = () => {
+							flow.cleanup();
+							process.exit(0);
+						};
+
+						process.on("SIGINT", cleanupHandler);
+						process.on("SIGTERM", cleanupHandler);
 					} catch (error) {
 						setError(error instanceof Error ? error.message : String(error));
 						setStatus("error");

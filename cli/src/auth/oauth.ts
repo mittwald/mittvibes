@@ -176,15 +176,19 @@ export interface OAuthFlowResult {
 	authUrl: string;
 	openBrowser: () => Promise<void>;
 	waitForCompletion: () => Promise<void>;
+	cleanup: () => void;
 }
 
 export async function startOAuthFlow(): Promise<OAuthFlowResult> {
 	// Generate PKCE pair
 	const { verifier, challenge } = generatePKCEPair();
 
+	// Store server reference for cleanup
+	let server: http.Server | null = null;
+
 	// Create callback server
 	const authCodePromise = new Promise<string>((resolve, reject) => {
-		const server = createCallbackServer(resolve, reject);
+		server = createCallbackServer(resolve, reject);
 
 		server.listen(OAUTH_CALLBACK_PORT, () => {
 			// Server is ready
@@ -230,6 +234,11 @@ export async function startOAuthFlow(): Promise<OAuthFlowResult> {
 			await saveAuthConfig({
 				accessToken: tokenResponse.access_token,
 			});
+		},
+		cleanup: () => {
+			if (server && server.listening) {
+				server.close();
+			}
 		},
 	};
 }
