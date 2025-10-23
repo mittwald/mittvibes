@@ -8,39 +8,60 @@ This is a mittwald extension project using React components and API integration 
 - **API Client**: Always use `@mittwald/api-client` package's `MittwaldAPIV2Client.newWithToken()` for Mittwald API calls
 - **UI Components**: ALWAYS use `@mittwald/flow-remote-react-components` instead of standard HTML elements
   - **CRITICAL**: Never use raw HTML elements (`<div>`, `<span>`, `<p>`, `<h1-6>`, `<button>`, etc.)
-  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs and components via Context7.
+  - **CRITICAL**: ONLY import from `@mittwald/flow-remote-react-components` - never mix with `@mittwald/flow-react-components`
+  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs via Context7.
 
-  ### Core Component Mappings
-  - Use `Content` instead of `<div>`
-  - Use `Text` instead of `<p>`, `<span>`
-  - Use `Heading` instead of `<h1>`, `<h2>`, etc.
-  - Use `Button` instead of `<button>`
-  - Use `Section` for vertical content organization with automatic spacing/separators
+  ### Understanding Flow Packages
+  Two packages exist, but **ONLY use the remote package**:
+  - `@mittwald/flow-react-components` - Standard package (used in documentation examples)
+  - `@mittwald/flow-remote-react-components` - **USE THIS** (for mittwald extensions)
+
+  **Rule**: What's documented for the standard package works in the remote package - just change the import source.
 
   ### Component Philosophy
   - **Compositional**: Build UIs by composing semantic React components, not HTML primitives
   - **Semantic**: Components convey meaning and structure (e.g., `Header`, `Section`, `Content`)
+  - **Examples**: Use `Content` instead of `<div>`, `Text` instead of `<p>`, `Heading` instead of `<h1>`, `Button` instead of `<button>`
 
-  ### Component Categories
-  Flow organizes components into semantic categories:
-  - **Structure**: `Section`, `ColumnLayout`, `Flex`, `LayoutCard`, `Accordion`, `Table`, `List`, `Separator`
-  - **Content**: `Text`, `Heading`, `Label`, `LabeledValue`, `Icon`, `Image`, `Avatar`, `CodeBlock`, `Markdown`, `Skeleton`
-  - **Actions**: `Button`, `ActionGroup`, `Link`, `ContextMenu`
-  - **Form Controls**: `TextField`, `TextArea`, `NumberField`, `Select`, `Checkbox`, `Radio`, `Switch`, `DatePicker`, `Slider`, `FileField`, `MarkdownEditor`
-  - **Navigation**: Navigation components, tabs, breadcrumbs
-  - **Overlays**: Modals, popovers, tooltips, dialogs
-  - **Status**: Status indicators, badges, alerts
+  ### Working with Lists
+  - **Pattern**: Use `typedList<T>()` factory function for type-safe lists
+  - **Import**: `import { typedList } from "@mittwald/flow-remote-react-components"`
+  - **Basic Structure**:
+    ```tsx
+    interface Item { id: string; name: string; }
+    const ItemList = typedList<Item>();
 
-  ### UI Patterns
-  Flow provides documented patterns for common layouts:
-  - **Dashboard**: Presenting information in organized sections on a single surface
-  - **Setup/Onboarding**: Multi-step flows for user onboarding
-  - **Structural Layouts**: Page structure, content organization, spacing systems
+    <ItemList.List aria-label="Items">
+      <ItemList.StaticData data={items} />
+      <ItemList.Item>
+        {(item) => (
+          <ItemList.ItemView>
+            <Heading>{item.name}</Heading>
+            {/* Additional content */}
+          </ItemList.ItemView>
+        )}
+      </ItemList.Item>
+    </ItemList.List>
+    ```
+  - **Documentation**: Query Context7 with `/websites/mittwald_github_io_flow` and topic "List" for current API
 
-  ### Finding Component Information
-  - **Primary Source**: Use Context7 to find current component APIs, props, and usage patterns
-  - **Documentation**: https://mittwald.github.io/flow/03-components/
-  - **Remember**: Documentation may be outdated due to rapid development - Context7 has the latest information
+  ### Finding & Using Components
+  1. **Browse Flow Documentation**: https://mittwald.github.io/flow/03-components/
+     - Explore component categories and usage patterns
+     - Note: Examples show `@mittwald/flow-react-components` imports
+
+  2. **Get Current API via Context7**:
+     - Use `mcp__context7__get-library-docs` with library ID `/websites/mittwald_github_io_flow`
+     - Specify topic (e.g., "Button", "LabeledValue", "List") for targeted results
+     - Provides up-to-date component APIs, props, and usage patterns
+
+  3. **Apply Import Rule**: Replace package name in examples
+     - Documentation shows: `import { Component } from "@mittwald/flow-react-components"`
+     - You use: `import { Component } from "@mittwald/flow-remote-react-components"`
+
+  4. **Verify if Needed**: Check `node_modules/@mittwald/flow-remote-react-components/dist/types` for exports
+
+  **Remember**: Flow components change frequently - always verify current API via Context7 rather than relying on static documentation
 
 ## API Integration
 
