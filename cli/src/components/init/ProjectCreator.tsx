@@ -4,6 +4,8 @@ import { pipeline } from "node:stream";
 import { promisify } from "node:util";
 import fs from "fs-extra";
 import { Box, Text } from "ink";
+import SelectInput from "ink-select-input";
+import TextInput from "ink-text-input";
 import fetch from "node-fetch";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -11,9 +13,20 @@ import yauzl from "yauzl";
 
 const pipelineAsync = promisify(pipeline);
 
+type ProjectCreationStatus =
+	| "checking"
+	| "conflict"
+	| "renaming"
+	| "downloading"
+	| "extracting"
+	| "updating"
+	| "completed";
+
+type ConflictResolution = "none" | "choose" | "rename" | "wipe";
+
 interface ProjectCreatorProps {
 	projectName: string;
-	onComplete: () => void;
+	onComplete: (actualFolderName: string) => void;
 	onError: (error: string) => void;
 }
 
@@ -98,23 +111,43 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 	onComplete,
 	onError,
 }) => {
-	const [status, setStatus] = useState<
-		"downloading" | "extracting" | "updating" | "completed"
-	>("downloading");
+	const [status, setStatus] = useState<ProjectCreationStatus>("checking");
+	const [conflictResolution, setConflictResolution] =
+		useState<ConflictResolution>("none");
+	const [newProjectName, setNewProjectName] = useState("");
 
+	// Check for folder conflict on mount
 	useEffect(() => {
+		const checkFolder = async () => {
+			const projectPath = path.join(process.cwd(), projectName);
+			if (await fs.pathExists(projectPath)) {
+				setStatus("conflict");
+			} else {
+				setStatus("downloading");
+			}
+		};
+		checkFolder();
+	}, [projectName]);
+
+	// Handle project creation based on conflict resolution
+	useEffect(() => {
+		if (status !== "downloading") return;
+
 		const createProject = async () => {
 			try {
-				const projectPath = path.join(process.cwd(), projectName);
+				const finalProjectName =
+					conflictResolution === "rename" && newProjectName
+						? newProjectName
+						: projectName;
+				const projectPath = path.join(process.cwd(), finalProjectName);
 
-				if (await fs.pathExists(projectPath)) {
-					throw new Error(
-						`Directory "${projectName}" already exists in current location`,
-					);
+				// If wiping, remove existing folder
+				if (conflictResolution === "wipe" && (await fs.pathExists(projectPath))) {
+					await fs.remove(projectPath);
 				}
 
 				setStatus("downloading");
-				const extractedPath = await downloadAndExtractTemplate(projectName);
+				const extractedPath = await downloadAndExtractTemplate(finalProjectName);
 
 				setStatus("extracting");
 				await fs.copy(extractedPath, projectPath, {
@@ -122,12 +155,12 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 						!src.includes("node_modules") && !src.includes(".git"),
 				});
 
-				await fs.remove(path.join(process.cwd(), `${projectName}-temp`));
+				await fs.remove(path.join(process.cwd(), `${finalProjectName}-temp`));
 
 				setStatus("updating");
 				const packageJsonPath = path.join(projectPath, "package.json");
 				const packageJson = await fs.readJson(packageJsonPath);
-				packageJson.name = projectName;
+				packageJson.name = finalProjectName;
 				await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 
 				// Recreate CLAUDE.md symlink (GitHub ZIP doesn't preserve symlinks)
@@ -141,9 +174,13 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 				}
 
 				setStatus("completed");
-				onComplete();
+				onComplete(finalProjectName);
 			} catch (error) {
-				const tempDir = path.join(process.cwd(), `${projectName}-temp`);
+				const finalProjectName =
+					conflictResolution === "rename" && newProjectName
+						? newProjectName
+						: projectName;
+				const tempDir = path.join(process.cwd(), `${finalProjectName}-temp`);
 				if (await fs.pathExists(tempDir)) {
 					await fs.remove(tempDir);
 				}
@@ -152,10 +189,16 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		};
 
 		createProject();
-	}, [projectName, onComplete, onError]);
+	}, [status, projectName, newProjectName, conflictResolution, onComplete, onError]);
 
 	const getStatusText = () => {
 		switch (status) {
+			case "checking":
+				return "🔍 Checking project folder...";
+			case "conflict":
+				return "⚠️  Folder already exists";
+			case "renaming":
+				return "📝 Enter new folder name";
 			case "downloading":
 				return "🔄 Downloading project template...";
 			case "extracting":
@@ -167,13 +210,92 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		}
 	};
 
+	// Render conflict resolution UI
+	if (status === "conflict") {
+		const conflictItems = [
+			{
+				label: "Rename project folder",
+				value: "rename",
+			},
+			{
+				label: "Delete existing folder and create new project",
+				value: "wipe",
+			},
+		];
+
+		return (
+			<Box flexDirection="column">
+				<Text color="yellow">{getStatusText()}</Text>
+				<Box marginTop={1}>
+					<Text color="white">
+						A folder named "{projectName}" already exists in this location.
+					</Text>
+				</Box>
+				<Box marginTop={1}>
+					<Text color="white">How would you like to proceed?</Text>
+				</Box>
+				<Box marginTop={1}>
+					<SelectInput
+						items={conflictItems}
+						onSelect={(item) => {
+							if (item.value === "rename") {
+								setStatus("renaming");
+							} else if (item.value === "wipe") {
+								setConflictResolution("wipe");
+								setStatus("downloading");
+							}
+						}}
+					/>
+				</Box>
+			</Box>
+		);
+	}
+
+	// Render rename input UI
+	if (status === "renaming") {
+		return (
+			<Box flexDirection="column">
+				<Text color="yellow">📝 Enter new folder name</Text>
+				<Box marginTop={1}>
+					<Text color="white">New folder name: </Text>
+					<TextInput
+						value={newProjectName}
+						onChange={setNewProjectName}
+						onSubmit={async () => {
+							if (!newProjectName.trim()) {
+								return;
+							}
+							// Check if the new name also conflicts
+							const newPath = path.join(process.cwd(), newProjectName);
+							if (await fs.pathExists(newPath)) {
+								onError(
+									`Folder "${newProjectName}" also already exists. Please choose a different name.`,
+								);
+								return;
+							}
+							setConflictResolution("rename");
+							setStatus("downloading");
+						}}
+					/>
+				</Box>
+				<Box marginTop={1}>
+					<Text color="gray">Press Enter to continue</Text>
+				</Box>
+			</Box>
+		);
+	}
+
 	return (
 		<Box flexDirection="column">
 			<Text color="yellow">{getStatusText()}</Text>
 			{status === "completed" && (
 				<Box marginTop={1}>
 					<Text color="green">
-						Your project "{projectName}" has been created successfully!
+						Your project "
+						{conflictResolution === "rename" && newProjectName
+							? newProjectName
+							: projectName}
+						" has been created successfully!
 					</Text>
 				</Box>
 			)}
