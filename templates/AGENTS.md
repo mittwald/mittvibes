@@ -7,12 +7,40 @@ This is a mittwald extension project using React components and API integration 
 - **Package Manager**: Use `pnpm` exclusively
 - **API Client**: Always use `@mittwald/api-client` package's `MittwaldAPIV2Client.newWithToken()` for Mittwald API calls
 - **UI Components**: ALWAYS use `@mittwald/flow-remote-react-components` instead of standard HTML elements
+  - **CRITICAL**: Never use raw HTML elements (`<div>`, `<span>`, `<p>`, `<h1-6>`, `<button>`, etc.)
+  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs and components via Context7.
+
+  ### Core Component Mappings
   - Use `Content` instead of `<div>`
   - Use `Text` instead of `<p>`, `<span>`
   - Use `Heading` instead of `<h1>`, `<h2>`, etc.
   - Use `Button` instead of `<button>`
-  - Never use raw HTML elements like `<div>`, `<span>`, `<p>`, `<h1-6>`, `<button>`, etc.
-  - Reference: https://mittwald.github.io/flow/03-components/
+  - Use `Section` for vertical content organization with automatic spacing/separators
+
+  ### Component Philosophy
+  - **Compositional**: Build UIs by composing semantic React components, not HTML primitives
+  - **Semantic**: Components convey meaning and structure (e.g., `Header`, `Section`, `Content`)
+
+  ### Component Categories
+  Flow organizes components into semantic categories:
+  - **Structure**: `Section`, `ColumnLayout`, `Flex`, `LayoutCard`, `Accordion`, `Table`, `List`, `Separator`
+  - **Content**: `Text`, `Heading`, `Label`, `LabeledValue`, `Icon`, `Image`, `Avatar`, `CodeBlock`, `Markdown`, `Skeleton`
+  - **Actions**: `Button`, `ActionGroup`, `Link`, `ContextMenu`
+  - **Form Controls**: `TextField`, `TextArea`, `NumberField`, `Select`, `Checkbox`, `Radio`, `Switch`, `DatePicker`, `Slider`, `FileField`, `MarkdownEditor`
+  - **Navigation**: Navigation components, tabs, breadcrumbs
+  - **Overlays**: Modals, popovers, tooltips, dialogs
+  - **Status**: Status indicators, badges, alerts
+
+  ### UI Patterns
+  Flow provides documented patterns for common layouts:
+  - **Dashboard**: Presenting information in organized sections on a single surface
+  - **Setup/Onboarding**: Multi-step flows for user onboarding
+  - **Structural Layouts**: Page structure, content organization, spacing systems
+
+  ### Finding Component Information
+  - **Primary Source**: Use Context7 to find current component APIs, props, and usage patterns
+  - **Documentation**: https://mittwald.github.io/flow/03-components/
+  - **Remember**: Documentation may be outdated due to rapid development - Context7 has the latest information
 
 ## API Integration
 
