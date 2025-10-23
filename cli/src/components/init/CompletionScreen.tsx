@@ -171,6 +171,20 @@ NODE_ENV=development
 				</Text>
 			</Box>
 			<Box marginTop={1}>
+				<Text color="gray">Quick start:</Text>
+			</Box>
+			<Box
+				marginTop={0}
+				paddingX={2}
+				paddingY={1}
+				borderStyle="single"
+				borderColor="gray"
+			>
+				<Text color="cyan">
+					cd {config.projectName} && pnpm dev
+				</Text>
+			</Box>
+			<Box marginTop={1}>
 				<Text>
 					━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 				</Text>
