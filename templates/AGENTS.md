@@ -3,6 +3,76 @@
 ## Project Overview
 This is a mittwald extension project using React components and API integration with the mittwald platform.
 
+## Documentation Resources
+
+mittwald extension development relies on three primary documentation sources. Each serves a distinct purpose in the development workflow:
+
+### 1. Extension Core Concepts & Contribution Guide
+
+**What it covers:**
+- How extensions work (architecture, lifecycle, integration points)
+- Extension lifecycle methods and webhook notifications
+- Integration with mStudio platform
+- Contribution requirements and process
+- Monetization and support guidelines
+
+**When to use:**
+- Understanding extension architecture and how they connect to mStudio
+- Learning about lifecycle events and webhook handling
+- Planning contribution and release process
+- Understanding requirements for becoming a contributor
+
+**Access:**
+- **URL**: https://developer.mittwald.de/docs/v2/contribution/
+- Browse directly or fetch specific topics via WebFetch
+
+**Key Concepts:**
+- Extensions are independent web applications with public backends
+- mStudio notifies extensions via webhooks for instance creation/deletion
+- Extensions connect via REST APIs with OAuth authentication
+- 80% revenue share for monetized extensions
+
+### 2. REST API Documentation
+
+**What it covers:**
+- Available mittwald API endpoints
+- Request parameters and response types
+- Authentication methods
+- Type-safe API client usage
+
+**When to use:**
+- Implementing server-side API calls
+- Discovering available endpoints and their capabilities
+- Understanding request/response schemas
+- Troubleshooting API integration issues
+
+**Access:**
+- **Context7**: Use `mcp__context7__get-library-docs` with library-id: `developer_mittwald_de-v2`
+- Specify topic for targeted results (e.g., "user", "project", "organization")
+- Provides up-to-date endpoint documentation and type definitions
+
+### 3. Flow UI Components
+
+**What it covers:**
+- React component APIs and props
+- Component composition patterns
+- Usage examples and best practices
+- Component categories (layout, forms, data display, etc.)
+
+**When to use:**
+- Building extension UI
+- Finding appropriate components for specific use cases
+- Understanding component props and behavior
+- Learning composition patterns
+
+**Access:**
+- **Browse**: https://mittwald.github.io/flow/03-components/ for component overview
+- **Context7**: Use `mcp__context7__get-library-docs` with library-id: `/websites/mittwald_github_io_flow`
+- Specify topic for targeted results (e.g., "Button", "LabeledValue", "List")
+- **Critical**: Always use `@mittwald/flow-remote-react-components` package (see UI Components section below)
+
+**Remember**: Flow components change frequently - always verify current API via Context7 for accurate, up-to-date information.
+
 ## Package Management & Dependencies
 - **Package Manager**: Use `pnpm` exclusively
 - **API Client**: Always use `@mittwald/api-client` package's `MittwaldAPIV2Client.newWithToken()` for Mittwald API calls
