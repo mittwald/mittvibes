@@ -9,7 +9,7 @@ This is a mittwald extension project using React components and API integration 
 - **UI Components**: ALWAYS use `@mittwald/flow-remote-react-components` instead of standard HTML elements
   - **CRITICAL**: Never use raw HTML elements (`<div>`, `<span>`, `<p>`, `<h1-6>`, `<button>`, etc.)
   - **CRITICAL**: ONLY import from `@mittwald/flow-remote-react-components` - never mix with `@mittwald/flow-react-components`
-  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs via Context7.
+  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs via Context7 (library-id: developer_mittwald_de-v2).
 
   ### Understanding Flow Packages
   Two packages exist, but **ONLY use the remote package**:
@@ -128,8 +128,8 @@ try {
 - Consider different status codes and handle them appropriately
 
 ### Documentation Reference
-- **Latest API Documentation**: Always reference context7 for the most up-to-date mittwald API documentation
-- Use context7 to find available endpoints, parameters, and response types
+- **Latest API Documentation**: Always reference context7 (library-id: developer_mittwald_de-v2) for the most up-to-date mittwald API documentation
+- Use context7 (library-id: developer_mittwald_de-v2) to find available endpoints, parameters, and response types
 
 ## Code Standards & Architecture
 - always refer to mittwald with lowercase "m"
