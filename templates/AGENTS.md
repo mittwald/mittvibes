@@ -3,6 +3,14 @@
 ## Project Overview
 This is a mittwald extension project using React components and API integration with the mittwald platform.
 
+## Important Commands
+
+- `pnpm dev`: run dev server
+
+### After changing prisma schema
+1. `pnpm db:generate`
+2. `pnpm db:push`
+
 ## Documentation Resources
 
 mittwald extension development relies on three primary documentation sources. Each serves a distinct purpose in the development workflow:
@@ -47,7 +55,7 @@ mittwald extension development relies on three primary documentation sources. Ea
 - Troubleshooting API integration issues
 
 **Access:**
-- **Context7**: Use `mcp__context7__get-library-docs` with library-id: `developer_mittwald_de-v2`
+- **Context7**: Use `mcp__context7__get-library-docs` with library-id: `/websites/developer_mittwald_de-v2`
 - Specify topic for targeted results (e.g., "user", "project", "organization")
 - Provides up-to-date endpoint documentation and type definitions
 
@@ -73,13 +81,70 @@ mittwald extension development relies on three primary documentation sources. Ea
 
 **Remember**: Flow components change frequently - always verify current API via Context7 for accurate, up-to-date information.
 
+### Other Resources
+
+- Tanstack Start: use context7
+- Prisma: use context7
+
+## Working with Documentation - CRITICAL RULES
+
+### NEVER Guess or Invent URLs
+**CRITICAL**: Never invent, guess, or construct URLs based on assumptions about documentation structure.
+
+### Always Follow Links Systematically
+When looking for documentation:
+
+1. **Start with Known URLs**: Begin with verified working URLs:
+   - Main contribution guide: `https://developer.mittwald.de/docs/v2/contribution/`
+   - Flow components: `https://mittwald.github.io/flow/03-components/`
+
+2. **Extract Navigation**: Use WebFetch to get the actual links on a page:
+   ```
+   WebFetch with prompt: "List all links and navigation items on this page. What are the main sections and their URLs?"
+   ```
+
+3. **Follow the Trail**: Navigate through the documentation structure using the links you found:
+   - Start at a known page
+   - Ask for links on that page
+   - Follow those links to find what you need
+   - Never skip ahead to "guessed" URLs
+
+4. **Verify Before Using**: If a URL returns 404, stop and re-trace your steps from a known working URL
+
+### Example: Finding Anchor Points Documentation
+
+❌ **WRONG**: Guessing `https://developer.mittwald.de/docs/v2/reference/extensions/frontend-anchors`
+
+✅ **CORRECT**:
+1. Start at `https://developer.mittwald.de/docs/v2/contribution/`
+2. WebFetch to find links → discover `/docs/v2/category/reference/`
+3. WebFetch that page to find links → discover `/docs/v2/contribution/reference/frontend-fragment-anchors/`
+4. Use the actual discovered URL
+
+### Reference: Available Anchor Points
+
+Documentation URL: `https://developer.mittwald.de/docs/v2/contribution/reference/frontend-fragment-anchors/`
+
+**Organization/Customer Level:**
+- `/customers/customer/menu/section/extensions/item` - Menu entry in organization (access: `customerId`)
+
+**Project Level:**
+- `/projects/project/menu/section/extensions/item` - Menu entry in project overview (access: `projectId`)
+- `/projects/project/apps/detail/menu-top/item` - Tab in app detail views (access: `projectId`, `appInstallationId`)
+- `/projects/project/email/addresses/detail/menu-top/item` - Tab in email config (access: `projectId`, `emailAddressId`)
+- `/projects/project/domain/domains/detail/menu-top/item` - Tab in domain management (access: `projectId`, `ingressId`)
+- `/projects/project/container/containers/detail/menu-top/item` - Tab in container detail (access: `projectId`, `containerId`)
+- `/projects/project/backups/detail/menu-top/item` - Tab in backup detail (access: `projectId`, `backupId`)
+
+**Required Properties**: All anchors need SVG icon and localized title object (currently "de" only)
+
 ## Package Management & Dependencies
 - **Package Manager**: Use `pnpm` exclusively
 - **API Client**: Always use `@mittwald/api-client` package's `MittwaldAPIV2Client.newWithToken()` for Mittwald API calls
 - **UI Components**: ALWAYS use `@mittwald/flow-remote-react-components` instead of standard HTML elements
   - **CRITICAL**: Never use raw HTML elements (`<div>`, `<span>`, `<p>`, `<h1-6>`, `<button>`, etc.)
   - **CRITICAL**: ONLY import from `@mittwald/flow-remote-react-components` - never mix with `@mittwald/flow-react-components`
-  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs via Context7 (library-id: developer_mittwald_de-v2).
+  - **Library Status**: Flow is in active development and changes frequently (sometimes daily). Always verify current APIs via Context7 (library-id: /websites/developer_mittwald_de-v2).
 
   ### Understanding Flow Packages
   Two packages exist, but **ONLY use the remote package**:
@@ -198,8 +263,8 @@ try {
 - Consider different status codes and handle them appropriately
 
 ### Documentation Reference
-- **Latest API Documentation**: Always reference context7 (library-id: developer_mittwald_de-v2) for the most up-to-date mittwald API documentation
-- Use context7 (library-id: developer_mittwald_de-v2) to find available endpoints, parameters, and response types
+- **Latest API Documentation**: Always reference context7 (library-id: /websites/developer_mittwald_de-v2) for the most up-to-date mittwald API documentation
+- Use context7 (library-id: /websites/developer_mittwald_de-v2) to find available endpoints, parameters, and response types
 
 ## Code Standards & Architecture
 - always refer to mittwald with lowercase "m"
