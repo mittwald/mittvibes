@@ -13,7 +13,7 @@ This is a CLI tool built with TypeScript that generates boilerplate for mittwald
 
 ## Code Standards & Architecture
 - Always refer to mittwald with lowercase "m"
-- Maintain monochrome CLI styling (white on black theme) for weissaufschwarz branding
+- Maintain monochrome CLI styling (white on black theme)
 
 ### Module System
 - **ESM Only**: Always use ESM-style imports, never `require()`

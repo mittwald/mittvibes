@@ -97,6 +97,6 @@ src/
 
 ## Contributing
 
-This project was generated with mittvibes CLI by weissaufschwarz.
+This project was generated with mittvibes CLI by mittwald.
 
 For issues with the CLI tool itself, please report them at the mittvibes repository.
