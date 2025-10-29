@@ -60,7 +60,6 @@ The CLI will guide you through the complete setup process:
 - Prisma ORM with PostgreSQL and field encryption
 - mittwald Extension Bridge integration
 - Webhook handling with mitthooks
-- Sentry error tracking
 - Biome linting and formatting
 
 ### 🛠️ Developer Experience
