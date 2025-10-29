@@ -40,7 +40,7 @@ async function downloadAndExtractTemplate(
 
 	try {
 		const response = await fetch(
-			"https://github.com/weissaufschwarz/mittvibes/archive/refs/heads/main.zip",
+			"https://github.com/mittwald/mittvibes/archive/refs/heads/main.zip",
 		);
 		if (!response.ok) {
 			throw new Error(`Failed to download template: ${response.statusText}`);

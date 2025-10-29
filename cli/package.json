@@ -26,7 +26,7 @@
 		"cli",
 		"generator"
 	],
-	"author": "weissaufschwarz",
+	"author": "mittwald",
 	"license": "MIT",
 	"dependencies": {
 		"@47ng/cloak": "^1.2.0",
