@@ -78,8 +78,7 @@ mittvibes help         # Show available commands
 - mittwald account with access to organizations
 - Port 52847 available for OAuth callback
 
-**For Generated Extensions:**
-- PostgreSQL database (non-pooling connection)
+**For Generating Extensions:**
 - Organization with contributor status
 
 ---

@@ -32,9 +32,6 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Install dependencies for root
-        run: pnpm install
-
       - name: Install dependencies for cli
         run: cd cli && pnpm install
 
