@@ -7,8 +7,8 @@ on:
     branches: ["main"]
 
 jobs:
-  build-and-lint:
-    name: Build and Lint CLI
+  build_fe:
+    name: Build and Lint
     timeout-minutes: 15
     runs-on: ubuntu-latest
 
