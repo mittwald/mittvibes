@@ -11,6 +11,9 @@ jobs:
     name: Build and Lint
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
 
     steps:
       - name: Check out code
@@ -30,12 +33,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-        working-directory: cli
 
       - name: Run biome check
         run: pnpm check
-        working-directory: cli
 
       - name: Build
         run: pnpm build
-        working-directory: cli
