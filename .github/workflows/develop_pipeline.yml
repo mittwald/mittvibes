@@ -32,9 +32,6 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Install dependencies for root
-        run: pnpm install
-
       - name: Install dependencies for cli
         run: cd cli && pnpm install
 
@@ -42,7 +39,7 @@ jobs:
         run: cd cli && pnpm build
 
       - name: Lint
-        run: pnpm lint
+        run: cd cli && pnpm lint
 
       - name: Run biome check
-        run: pnpm check
+        run: cd cli && pnpm check
