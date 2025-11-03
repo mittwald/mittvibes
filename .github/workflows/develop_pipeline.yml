@@ -6,40 +6,36 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  DATABASE_URL: "http://localhost:5432/asdf"
-  EXTENSION_ID: "asdf"
-  PRISMA_FIELD_ENCRYPTION_KEY: "k1.aesgcm256.HFZYtt3nubKdN-zfDPNTuJg7inxo60zyoZH-0U1VJjs=" # no secret, dummy value
-  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-
 jobs:
   build_fe:
     name: Build and Lint
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.4.1
+          version: 10.18.3
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
+          cache-dependency-path: cli/pnpm-lock.yaml
 
-      - name: Install dependencies for cli
-        run: cd cli && pnpm install
-
-      - name: Build
-        run: cd cli && pnpm build
-
-      - name: Lint
-        run: cd cli && pnpm lint
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Run biome check
-        run: cd cli && pnpm check
+        run: pnpm check
+
+      - name: Build
+        run: pnpm build
