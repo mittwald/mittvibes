@@ -1,6 +1,6 @@
 {
 	"name": "mittvibes-cli",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"description": "CLI tool to generate boilerplate for mittwald extensions",
 	"type": "module",
 	"exports": {

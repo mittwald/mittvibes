@@ -1,0 +1,33 @@
+name: Publish Node.js Package
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - run: pnpm install
+        working-directory: cli
+      - run: pnpm check
+        working-directory: cli
+      - run: pnpm build
+        working-directory: cli
+      - run: pnpm version from-git --no-git-tag-version
+        working-directory: cli
+      - run: cp ../README.md ../LICENSE .
+        working-directory: cli
+      - run: pnpm publish --no-git-checks
+        working-directory: cli
