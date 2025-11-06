@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
-import TextInput from "ink-text-input";
 import type React from "react";
+import { PasteableTextInput } from "./PasteableTextInput.js";
 
 interface UrlInputProps {
 	prompt: string;
@@ -33,7 +33,7 @@ export const UrlInput: React.FC<UrlInputProps> = ({
 			</Box>
 			<Box marginTop={1}>
 				<Text color="gray">URL: </Text>
-				<TextInput
+				<PasteableTextInput
 					value={value}
 					onChange={onChange}
 					onSubmit={onSubmit}
