@@ -3,6 +3,7 @@ import TextInput from "ink-text-input";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { createExtension } from "../../api/mittwald.js";
+import { UrlInput } from "./UrlInput.js";
 
 interface ExtensionSetupProps {
 	projectName: string;
@@ -181,60 +182,27 @@ export const ExtensionSetup: React.FC<ExtensionSetupProps> = ({
 
 	if (state === "frontendUrl") {
 		return (
-			<Box flexDirection="column">
-				<Text color="white" bold>
-					🎯 Extension Development Setup
-				</Text>
-
-				<Box marginTop={1}>
-					<Text>Frontend URL (where your extension will be hosted):</Text>
-				</Box>
-				<Box marginTop={1}>
-					<Text color="gray">URL: </Text>
-					<TextInput
-						value={frontendUrl}
-						onChange={setFrontendUrl}
-						onSubmit={handleFrontendUrlSubmit}
-						placeholder="https://your-domain.com"
-					/>
-				</Box>
-				<Box marginTop={1}>
-					<Text color="gray">
-						Your public URL (e.g., ngrok, cloudflared tunnel)
-					</Text>
-				</Box>
-				<Box marginTop={1}>
-					<Text color="yellow">
-						Note: You can update this later in mStudio after deployment
-					</Text>
-				</Box>
-			</Box>
+			<UrlInput
+				prompt="Where will your extension be publicly accessible?"
+				label="Frontend URL"
+				value={frontendUrl}
+				onChange={setFrontendUrl}
+				onSubmit={handleFrontendUrlSubmit}
+				placeholder="https://your-domain.com"
+			/>
 		);
 	}
 
 	if (state === "webhookUrl") {
 		return (
-			<Box flexDirection="column">
-				<Text color="white" bold>
-					🎯 Extension Development Setup
-				</Text>
-
-				<Box marginTop={1}>
-					<Text>Webhook URL (optional, press Enter to skip):</Text>
-				</Box>
-				<Box marginTop={1}>
-					<Text color="gray">URL: </Text>
-					<TextInput
-						value={webhookUrl}
-						onChange={setWebhookUrl}
-						onSubmit={handleWebhookUrlSubmit}
-						placeholder="https://your-domain.com/webhook"
-					/>
-				</Box>
-				<Box marginTop={1}>
-					<Text color="gray">Leave empty to configure later in mStudio...</Text>
-				</Box>
-			</Box>
+			<UrlInput
+				prompt="Need to receive webhook events from mittwald?"
+				label="Webhook URL"
+				value={webhookUrl}
+				onChange={setWebhookUrl}
+				onSubmit={handleWebhookUrlSubmit}
+				placeholder="https://your-domain.com/webhook"
+			/>
 		);
 	}
 

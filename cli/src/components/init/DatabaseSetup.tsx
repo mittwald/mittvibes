@@ -3,9 +3,9 @@ import path from "node:path";
 import fs from "fs-extra";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
-import TextInput from "ink-text-input";
 import type React from "react";
 import { useState } from "react";
+import { PasteableTextInput } from "./PasteableTextInput.js";
 
 interface DatabaseSetupProps {
 	projectName: string;
@@ -176,12 +176,11 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 						<Text>Enter your PostgreSQL connection URL (non-pooling):</Text>
 						<Box marginTop={1}>
 							<Text color="gray">URL: </Text>
-							<TextInput
+							<PasteableTextInput
 								value={databaseUrl}
 								onChange={setDatabaseUrl}
 								onSubmit={handleUrlSubmit}
 								placeholder="postgresql://user:password@host:port/database"
-								highlightPastedText={true}
 							/>
 						</Box>
 						<Box marginTop={1}>
