@@ -85,6 +85,11 @@ export const ContextSelector: React.FC<ContextSelectorProps> = ({
 							Choose the context where your extension will be available:
 						</Text>
 						<Box marginTop={1}>
+							<Text color="gray">
+								(You may change this later during development)
+							</Text>
+						</Box>
+						<Box marginTop={1}>
 							<SelectInput
 								items={contextItems}
 								onSelect={handleContextSelect}
