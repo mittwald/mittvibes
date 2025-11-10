@@ -1,5 +1,5 @@
 import { assertStatus, MittwaldAPIV2Client } from "@mittwald/api-client";
-import { getAccessToken } from "../utils/config.js";
+import { clearAuthConfig, getAccessToken } from "../utils/config.js";
 
 interface Customer {
 	customerId: string;
@@ -23,8 +23,16 @@ interface ExtensionInstallData {
 	projectId?: string;
 }
 
-// Create API client with authentication
+// Cached API client instance
+let cachedClient: MittwaldAPIV2Client | null = null;
+
+// Create API client with authentication and 401 interceptor
 async function createAPIClient(): Promise<MittwaldAPIV2Client> {
+	// Return cached client if available
+	if (cachedClient) {
+		return cachedClient;
+	}
+
 	const token = await getAccessToken();
 
 	if (!token) {
@@ -33,7 +41,32 @@ async function createAPIClient(): Promise<MittwaldAPIV2Client> {
 		);
 	}
 
-	return MittwaldAPIV2Client.newWithToken(token);
+	const client = MittwaldAPIV2Client.newWithToken(token);
+
+	// Add Axios response interceptor to handle 401 errors globally
+	client.axios.interceptors.response.use(
+		(response) => response,
+		async (error) => {
+			// Check if this is a 401 Unauthorized error
+			if (error.response?.status === 401) {
+				// Clear the cached client so next call creates a new one
+				cachedClient = null;
+				// Clear stored auth token
+				await clearAuthConfig();
+				// Return a more user-friendly error
+				throw new Error(
+					"Session expired or invalid. Please run 'mittvibes auth:login' to authenticate again.",
+				);
+			}
+			// Re-throw other errors
+			throw error;
+		},
+	);
+
+	// Cache the client
+	cachedClient = client;
+
+	return client;
 }
 
 // Fetch all customer organizations for the authenticated user
