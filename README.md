@@ -7,11 +7,11 @@ CLI tool to generate boilerplate for mittwald mStudio extensions.
 ## Installation
 
 ```bash
-npm install -g mittvibes-cli
+npm install -g @mittwald/mittvibes
 # or
-pnpm add -g mittvibes-cli
+pnpm add -g @mittwald/mittvibes
 # or run directly
-npx mittvibes-cli
+npx mittvibes
 ```
 
 ## Usage

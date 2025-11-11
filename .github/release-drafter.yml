@@ -61,5 +61,5 @@ template: |
   ## Installation
 
   ```bash
-  npm install -g mittvibes-cli
+  npm install -g @mittwald/mittvibes
   ```
