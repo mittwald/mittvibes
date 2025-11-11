@@ -1,5 +1,5 @@
 {
-	"name": "mittvibes-cli",
+	"name": "@mittwald/mittvibes",
 	"version": "0.1.0",
 	"description": "CLI tool to generate boilerplate for mittwald extensions",
 	"type": "module",
