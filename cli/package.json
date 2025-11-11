@@ -31,8 +31,10 @@
 		"cli",
 		"generator"
 	],
-	"author": "mittwald",
+	"author": "Mittwald CM Service GmbH & Co. KG <opensource@mittwald.de>",
 	"license": "MIT",
+	"homepage": "https://github.com/mittwald/mittvibes#readme",
+	"repository": "github:mittwald/mittvibes",
 	"dependencies": {
 		"@47ng/cloak": "^1.2.0",
 		"@mittwald/api-client": "^4.230.0",
