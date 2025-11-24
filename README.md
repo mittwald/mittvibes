@@ -11,7 +11,7 @@ npm install -g @mittwald/mittvibes
 # or
 pnpm add -g @mittwald/mittvibes
 # or run directly
-npx mittvibes
+npx @mittwald/mittvibes
 ```
 
 ## Usage
