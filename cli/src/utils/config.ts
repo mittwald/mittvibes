@@ -16,9 +16,8 @@ interface Config {
 const CONFIG_DIR = path.join(os.homedir(), ".mittvibes");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 
-// Use a more secure approach with createCipheriv/createDecipheriv
 const ENCRYPTION_KEY = crypto.scryptSync("mittvibes-cli-2024", "salt", 32);
-const IV = Buffer.alloc(16, 0); // Initialization vector
+const IV = Buffer.alloc(16, 0);
 
 function encrypt(text: string): string {
 	const cipher = crypto.createCipheriv("aes-256-cbc", ENCRYPTION_KEY, IV);
@@ -50,7 +49,6 @@ export async function loadConfig(): Promise<Config> {
 		const decryptedContent = decrypt(encryptedContent);
 		return JSON.parse(decryptedContent);
 	} catch {
-		// If decryption fails, try reading as plain JSON (for backward compatibility)
 		try {
 			return await fs.readJson(CONFIG_FILE);
 		} catch {

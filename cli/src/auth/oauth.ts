@@ -3,20 +3,14 @@ import http from "node:http";
 import open from "open";
 import { saveAuthConfig } from "../utils/config.js";
 
-// Fixed OAuth callback port (required by OAuth provider)
-// Using port 52847 - high in user range (49152-65535), unlikely to conflict
+// Port 52847 - high in user range, unlikely to conflict
 const OAUTH_CALLBACK_PORT = 52847;
 const OAUTH_CALLBACK_URL = `http://localhost:${OAUTH_CALLBACK_PORT}/callback`;
 
-// OAuth endpoints (mittwald OAuth2)
 const OAUTH_AUTHORIZE_URL = "https://api.mittwald.de/v2/oauth2/authorize";
 const OAUTH_TOKEN_URL = "https://api.mittwald.de/v2/oauth2/token";
 
-// OAuth client configuration
-// Using PKCE flow - no client secret required
-// This client_id must be registered with mittwald OAuth
-// Redirect URI must be set to: http://localhost:52847/callback
-const CLIENT_ID = "mittvibes"; // hard coded
+const CLIENT_ID = "mittvibes";
 
 interface TokenResponse {
 	access_token: string;
@@ -180,21 +174,15 @@ export interface OAuthFlowResult {
 }
 
 export async function startOAuthFlow(): Promise<OAuthFlowResult> {
-	// Generate PKCE pair
 	const { verifier, challenge } = generatePKCEPair();
 
-	// Store server reference for cleanup
 	let server: http.Server | null = null;
 
-	// Create callback server
 	const authCodePromise = new Promise<string>((resolve, reject) => {
 		server = createCallbackServer(resolve, reject);
 
-		server.listen(OAUTH_CALLBACK_PORT, () => {
-			// Server is ready
-		});
+		server.listen(OAUTH_CALLBACK_PORT, () => {});
 
-		// Handle server errors
 		server.on("error", (error: NodeJS.ErrnoException) => {
 			if (error.code === "EADDRINUSE") {
 				reject(
@@ -208,10 +196,9 @@ export async function startOAuthFlow(): Promise<OAuthFlowResult> {
 		});
 	});
 
-	// Generate state parameter for CSRF protection
+	// CSRF protection
 	const state = crypto.randomBytes(16).toString("hex");
 
-	// Build authorization URL
 	const authUrl = `${OAUTH_AUTHORIZE_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
 		OAUTH_CALLBACK_URL,
 	)}&response_type=code&scope=${encodeURIComponent(
@@ -224,13 +211,10 @@ export async function startOAuthFlow(): Promise<OAuthFlowResult> {
 			await open(authUrl);
 		},
 		waitForCompletion: async () => {
-			// Wait for auth code
 			const authCode = await authCodePromise;
 
-			// Exchange code for tokens
 			const tokenResponse = await exchangeCodeForToken(authCode, verifier);
 
-			// Save tokens
 			await saveAuthConfig({
 				accessToken: tokenResponse.access_token,
 			});

@@ -116,7 +116,6 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		useState<ConflictResolution>("none");
 	const [newProjectName, setNewProjectName] = useState("");
 
-	// Check for folder conflict on mount
 	useEffect(() => {
 		const checkFolder = async () => {
 			const projectPath = path.join(process.cwd(), projectName);
@@ -129,7 +128,6 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		checkFolder();
 	}, [projectName]);
 
-	// Handle project creation based on conflict resolution
 	useEffect(() => {
 		if (status !== "downloading") return;
 
@@ -284,7 +282,6 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 							if (!newProjectName.trim()) {
 								return;
 							}
-							// Check if the new name also conflicts
 							const newPath = path.join(process.cwd(), newProjectName);
 							if (await fs.pathExists(newPath)) {
 								onError(

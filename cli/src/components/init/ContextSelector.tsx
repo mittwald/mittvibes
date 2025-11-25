@@ -43,13 +43,11 @@ export const ContextSelector: React.FC<ContextSelectorProps> = ({
 		setExtensionContext(context);
 
 		if (context === "customer") {
-			// For customer context, we can proceed immediately
 			onSelect({
 				extensionContext: context,
-				selectedContextId: "customer-id", // This would be the actual customer ID
+				selectedContextId: "customer-id",
 			});
 		} else {
-			// For project context, we need to load and select a project
 			setState("loadingProjects");
 			try {
 				const projectList = await getProjects();
