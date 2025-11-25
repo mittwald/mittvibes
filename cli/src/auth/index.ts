@@ -1,4 +1,3 @@
-// Re-export for use in Ink components
 export {
 	clearAuthConfig,
 	getAuthConfig,

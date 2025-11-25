@@ -46,7 +46,6 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 	const [selectedProject, setSelectedProject] = useState<string | undefined>();
 	const [error, setError] = useState<string | null>(null);
 
-	// Fetch customers when needed
 	useEffect(() => {
 		if (step === "selectCustomer") {
 			const fetchCustomers = async () => {
@@ -63,7 +62,6 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 		}
 	}, [step]);
 
-	// Fetch projects when customer is selected
 	useEffect(() => {
 		if (step === "selectProject" && selectedInstallCustomer) {
 			const fetchProjects = async () => {
@@ -82,7 +80,6 @@ export const InstallationSetup: React.FC<InstallationSetupProps> = ({
 		}
 	}, [step, selectedInstallCustomer]);
 
-	// Install extension
 	useEffect(() => {
 		if (step === "installing") {
 			const install = async () => {

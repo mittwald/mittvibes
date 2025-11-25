@@ -23,12 +23,9 @@ interface ExtensionInstallData {
 	projectId?: string;
 }
 
-// Cached API client instance
 let cachedClient: MittwaldAPIV2Client | null = null;
 
-// Create API client with authentication and 401 interceptor
 async function createAPIClient(): Promise<MittwaldAPIV2Client> {
-	// Return cached client if available
 	if (cachedClient) {
 		return cachedClient;
 	}
@@ -43,44 +40,35 @@ async function createAPIClient(): Promise<MittwaldAPIV2Client> {
 
 	const client = MittwaldAPIV2Client.newWithToken(token);
 
-	// Add Axios response interceptor to handle 401 errors globally
 	client.axios.interceptors.response.use(
 		(response) => response,
 		async (error) => {
-			// Check if this is a 401 Unauthorized error
 			if (error.response?.status === 401) {
-				// Clear the cached client so next call creates a new one
 				cachedClient = null;
-				// Clear stored auth token
 				await clearAuthConfig();
-				// Return a more user-friendly error
 				throw new Error(
 					"Session expired or invalid. Please run 'mittvibes auth:login' to authenticate again.",
 				);
 			}
-			// Re-throw other errors
 			throw error;
 		},
 	);
 
-	// Cache the client
 	cachedClient = client;
 
 	return client;
 }
 
-// Fetch all customer organizations for the authenticated user
 export async function getCustomers(): Promise<Customer[]> {
 	try {
 		const client = await createAPIClient();
 		const response = await client.customer.listCustomers();
 		assertStatus(response, 200);
 
-		// Map the response to our Customer interface
 		return response.data.map((customer) => ({
 			customerId: customer.customerId,
 			name: customer.name,
-			description: undefined, // CustomerCustomer doesn't have description field
+			description: undefined,
 		}));
 	} catch (error) {
 		throw new Error(
@@ -91,29 +79,24 @@ export async function getCustomers(): Promise<Customer[]> {
 	}
 }
 
-// Check if a customer is a contributor
 export async function checkContributorStatus(
 	customerId: string,
 ): Promise<boolean> {
 	try {
 		const client = await createAPIClient();
 
-		// Check contributor status via the marketplace contributor endpoint
 		const response = await client.marketplace.extensionGetContributor({
 			contributorId: customerId,
 		});
 
-		// Use assertStatus with multiple status codes - 200 means contributor, 404 means not
 		try {
 			assertStatus(response, 200);
-			return true; // 200 response means they are a contributor
+			return true;
 		} catch {
-			// If not 200, check if it's 404 (not a contributor)
 			try {
 				assertStatus(response, 404);
-				return false; // 404 means not a contributor
+				return false;
 			} catch {
-				// Some other error occurred
 				throw new Error(`Unexpected response status: ${response.status}`);
 			}
 		}
@@ -126,7 +109,6 @@ export async function checkContributorStatus(
 	}
 }
 
-// Get all customers with their contributor status
 export async function getCustomersWithContributorStatus(): Promise<
 	CustomerWithContributorStatus[]
 > {
@@ -142,7 +124,6 @@ export async function getCustomersWithContributorStatus(): Promise<
 		}),
 	);
 
-	// Filter out failed requests and return successful ones
 	return customerStatuses
 		.filter(
 			(
@@ -153,14 +134,12 @@ export async function getCustomersWithContributorStatus(): Promise<
 		.map((result) => result.value);
 }
 
-// Submit interest to become a contributor
 export async function submitContributorInterest(
 	customerId: string,
 ): Promise<void> {
 	try {
 		const client = await createAPIClient();
 
-		// Use the actual API endpoint for expressing interest to contribute
 		const response =
 			await client.marketplace.contributorExpressInterestToContribute({
 				customerId,
@@ -177,7 +156,6 @@ export async function submitContributorInterest(
 	}
 }
 
-// Get all projects for a user
 export async function getProjects(): Promise<Project[]> {
 	try {
 		const client = await createAPIClient();
@@ -198,7 +176,6 @@ export async function getProjects(): Promise<Project[]> {
 	}
 }
 
-// Get all projects for a specific customer
 export async function getProjectsByCustomer(
 	customerId: string,
 ): Promise<Project[]> {
@@ -225,7 +202,6 @@ export async function getProjectsByCustomer(
 	}
 }
 
-// Create a new extension for a contributor
 export async function createExtension(params: {
 	contributorId: string;
 	name: string;
@@ -237,7 +213,7 @@ export async function createExtension(params: {
 	try {
 		const client = await createAPIClient();
 
-		// Use context-specific path for frontendFragments
+		// Context-specific path for menu item placement
 		const fragmentPath =
 			params.context === "customer"
 				? "/customers/customer/menu/section/extensions/item"
@@ -247,7 +223,7 @@ export async function createExtension(params: {
 			name: params.name,
 			context: params.context,
 			description: params.description || `${params.name} extension`,
-			scopes: [], // Empty for now as requested
+			scopes: [],
 			frontendFragments: {
 				[fragmentPath]: {
 					url: params.frontendUrl || "http://localhost:5173",
@@ -270,10 +246,9 @@ export async function createExtension(params: {
 
 		assertStatus(response, 201);
 
-		// Extract extension ID from response
 		const extensionId = response.data.id;
 
-		// Wait 5 seconds for the extension to be fully created in the system
+		// Wait for extension to be fully created in the system
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 
 		const secretResponse =
@@ -287,7 +262,6 @@ export async function createExtension(params: {
 
 		return { extensionId, extensionSecret };
 	} catch (error) {
-		console.error("[DEBUG] Full error:", error);
 		throw new Error(
 			`Failed to create extension: ${
 				error instanceof Error ? error.message : error
@@ -296,23 +270,21 @@ export async function createExtension(params: {
 	}
 }
 
-// Install an extension in a customer or project context
 export async function installExtension(
 	installData: ExtensionInstallData,
 ): Promise<void> {
 	try {
 		const client = await createAPIClient();
 
-		// Wait 5 seconds for the extension to be fully ready in the system
+		// Wait for extension to be ready
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 
 		if (installData.projectId) {
-			// Install in project context
 			const requestData = {
 				context: "project" as const,
 				contextId: installData.projectId,
 				extensionId: installData.extensionId,
-				consentedScopes: [], // Empty for now as requested
+				consentedScopes: [],
 			};
 
 			const response =
@@ -322,12 +294,11 @@ export async function installExtension(
 
 			assertStatus(response, 201);
 		} else if (installData.customerId) {
-			// Install in customer context
 			const requestData = {
 				context: "customer" as const,
 				contextId: installData.customerId,
 				extensionId: installData.extensionId,
-				consentedScopes: [], // Empty for now as requested
+				consentedScopes: [],
 			};
 
 			const response =

@@ -29,10 +29,8 @@ export const PasteableTextInput: React.FC<PasteableTextInputProps> = ({
 
 	useInput((input, key) => {
 		if (key.return) {
-			// Submit on Enter
 			onSubmit?.();
 		} else if (key.backspace || key.delete) {
-			// Handle backspace/delete
 			if (value.length > 0) {
 				onChange(value.slice(0, -1));
 			}
@@ -48,8 +46,6 @@ export const PasteableTextInput: React.FC<PasteableTextInputProps> = ({
 				onChange(value.slice(0, lastSpaceIndex + 1));
 			}
 		} else if (input) {
-			// Handle regular input and pasted content
-			// This properly captures multi-character paste events
 			onChange(value + input);
 			setRenderTrigger((prev) => prev + 1);
 		}

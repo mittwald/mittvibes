@@ -49,7 +49,6 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 	useEffect(() => {
 		const checkAuthAndLogin = async () => {
 			try {
-				// Check if already authenticated
 				if (await isAuthenticated()) {
 					const auth = await getAuthConfig();
 					setUserInfo({

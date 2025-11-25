@@ -99,7 +99,6 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 					? await fs.readFile(envPath, "utf-8")
 					: "";
 
-				// Update or add DATABASE_URL
 				const lines = existingEnv.split("\n");
 				const dbUrlIndex = lines.findIndex((line) =>
 					line.startsWith("DATABASE_URL="),
@@ -108,19 +107,16 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({
 				if (dbUrlIndex >= 0) {
 					lines[dbUrlIndex] = `DATABASE_URL="${databaseUrl}"`;
 				} else {
-					// Add at the beginning
 					lines.unshift(`DATABASE_URL="${databaseUrl}"`);
 				}
 
 				await fs.writeFile(envPath, lines.join("\n"));
 
-				// Generate Prisma client
 				execSync("pnpm db:generate", {
 					cwd: projectPath,
 					stdio: "inherit",
 				});
 
-				// Run migration - capture output for error debugging
 				execSync("pnpm db:migrate:deploy", {
 					cwd: projectPath,
 					stdio: "pipe",
