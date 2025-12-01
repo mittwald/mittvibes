@@ -3,6 +3,7 @@ import SelectInput from "ink-select-input";
 import type React from "react";
 import { useEffect, useState } from "react";
 import {
+	checkContractPartner,
 	getCustomersWithContributorStatus,
 	submitContributorInterest,
 } from "../../api/mittwald.js";
@@ -25,6 +26,8 @@ type SelectorState =
 	| "loading"
 	| "selectingOrg"
 	| "noOrgs"
+	| "checkingContractPartner"
+	| "noContractPartner"
 	| "nonContributor"
 	| "submittingInterest"
 	| "interestSubmitted"
@@ -63,7 +66,7 @@ export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
 		loadOrganizations();
 	}, []);
 
-	const handleOrganizationSelect = (item: { value: string }) => {
+	const handleOrganizationSelect = async (item: { value: string }) => {
 		const customer = customers.find((c) => c.customerId === item.value);
 		if (!customer) return;
 
@@ -75,7 +78,21 @@ export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
 				isContributor: true,
 			});
 		} else {
-			setState("nonContributor");
+			// Check if the customer has a valid contract partner before allowing to express interest
+			setState("checkingContractPartner");
+			try {
+				const hasContractPartner = await checkContractPartner(
+					customer.customerId,
+				);
+				if (hasContractPartner) {
+					setState("nonContributor");
+				} else {
+					setState("noContractPartner");
+				}
+			} catch (err) {
+				setError(err instanceof Error ? err.message : String(err));
+				setState("error");
+			}
 		}
 	};
 
@@ -151,6 +168,59 @@ export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
 							<SelectInput
 								items={orgItems}
 								onSelect={handleOrganizationSelect}
+							/>
+						</Box>
+					</Box>
+				);
+			}
+
+			case "checkingContractPartner":
+				return (
+					<Box flexDirection="column">
+						<Text color="yellow">🔄 Checking contract partner status...</Text>
+						<Box marginTop={1}>
+							<Text>Organization: {selectedCustomer?.name}</Text>
+						</Box>
+					</Box>
+				);
+
+			case "noContractPartner": {
+				const noContractPartnerItems = [
+					{
+						label: "Select a different organization",
+						value: "select_different",
+					},
+					{ label: "Exit", value: "exit" },
+				];
+
+				return (
+					<Box flexDirection="column">
+						<Text color="red">❌ Missing Contract Partner</Text>
+						<Box marginTop={1}>
+							<Text>Organization: {selectedCustomer?.name}</Text>
+						</Box>
+						<Box marginTop={1}>
+							<Text color="gray">
+								To express interest in becoming a contributor, your organization
+								needs a valid contract partner configured.
+							</Text>
+						</Box>
+						<Box marginTop={1}>
+							<Text>Please set up a contract partner in mStudio: </Text>
+						</Box>
+						<Box>
+							<Text color="cyan">
+								https://studio.mittwald.de/app/organizations/
+								{selectedCustomer?.customerId}/dashboard
+							</Text>
+						</Box>
+						<Box marginTop={1}>
+							<Text>What would you like to do?</Text>
+						</Box>
+						<Box marginTop={1}>
+							<SelectInput
+								items={noContractPartnerItems}
+								onSelect={handleNonContributorAction}
 							/>
 						</Box>
 					</Box>
