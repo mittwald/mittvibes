@@ -109,6 +109,27 @@ export async function checkContributorStatus(
 	}
 }
 
+export async function checkContractPartner(
+	customerId: string,
+): Promise<boolean> {
+	try {
+		const client = await createAPIClient();
+
+		const response = await client.customer.isCustomerLegallyCompetent({
+			customerId,
+		});
+
+		assertStatus(response, 200);
+		return response.data.isLegallyCompetent === true;
+	} catch (error) {
+		throw new Error(
+			`Failed to check contract partner status: ${
+				error instanceof Error ? error.message : error
+			}`,
+		);
+	}
+}
+
 export async function getCustomersWithContributorStatus(): Promise<
 	CustomerWithContributorStatus[]
 > {
