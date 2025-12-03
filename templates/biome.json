@@ -1,7 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
 	"files": {
-		"includes": ["**", "!**/.nitro", "!**/.output", "!**/.tanstack", "!**/dist"]
+		"includes": [
+			"**",
+			"!**/.nitro",
+			"!**/.output",
+			"!**/.tanstack",
+			"!**/dist",
+			"!**/*.gen.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,
