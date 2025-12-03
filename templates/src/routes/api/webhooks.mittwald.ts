@@ -133,7 +133,7 @@ export const ServerRoute = createServerFileRoute(
 
 			return new Response("Error handling webhook", {
 				status: 400,
-				statusText: "Internal Server Error",
+				statusText: "Bad Request",
 			});
 		}
 
