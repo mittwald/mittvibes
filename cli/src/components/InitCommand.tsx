@@ -6,6 +6,7 @@ import { ContextSelector } from "./init/ContextSelector.js";
 import { DatabaseSetup } from "./init/DatabaseSetup.js";
 import { DependencyInstaller } from "./init/DependencyInstaller.js";
 import { ExtensionSetup } from "./init/ExtensionSetup.js";
+import { GitHubActionSetup } from "./init/GitHubActionSetup.js";
 import { InstallationSetup } from "./init/InstallationSetup.js";
 import { OrganizationSelector } from "./init/OrganizationSelector.js";
 import { ProjectCreator } from "./init/ProjectCreator.js";
@@ -29,12 +30,14 @@ export interface ProjectConfig {
 	installedInContext?: string;
 	installedInCustomer?: string;
 	installedInProject?: string;
+	enableGitHubAction: boolean;
 }
 
 type InitStep =
 	| "organization"
 	| "context"
 	| "projectName"
+	| "githubAction"
 	| "creating"
 	| "dependencies"
 	| "database"
@@ -59,6 +62,9 @@ export const InitCommand: React.FC = () => {
 				setCurrentStep("projectName");
 				break;
 			case "projectName":
+				setCurrentStep("githubAction");
+				break;
+			case "githubAction":
 				setCurrentStep("creating");
 				break;
 			case "creating":
@@ -117,13 +123,24 @@ export const InitCommand: React.FC = () => {
 					/>
 				);
 
+			case "githubAction":
+				return (
+					<GitHubActionSetup
+						onComplete={(enableGitHubAction) => {
+							updateConfig({ enableGitHubAction });
+							nextStep();
+						}}
+					/>
+				);
+
 			case "creating":
-				if (!config.projectName) {
-					return <Text color="red">Error: Project name not configured</Text>;
+				if (!config.projectName || config.enableGitHubAction === undefined) {
+					return <Text color="red">Error: Required configuration missing</Text>;
 				}
 				return (
 					<ProjectCreator
 						projectName={config.projectName}
+						enableGitHubAction={config.enableGitHubAction}
 						onComplete={(actualFolderName) => {
 							// Update config with the actual folder name used (in case it was renamed)
 							updateConfig({ projectName: actualFolderName });

@@ -26,6 +26,7 @@ type ConflictResolution = "none" | "rename" | "wipe";
 
 interface ProjectCreatorProps {
 	projectName: string;
+	enableGitHubAction: boolean;
 	onComplete: (actualFolderName: string) => void;
 	onError: (error: string) => void;
 }
@@ -108,6 +109,7 @@ async function downloadAndExtractTemplate(
 
 export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 	projectName,
+	enableGitHubAction,
 	onComplete,
 	onError,
 }) => {
@@ -172,6 +174,33 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 					await fs.rename(gitignoreSource, gitignoreDest);
 				}
 
+				// Rename _dockerignore to .dockerignore
+				const dockerignoreSource = path.join(projectPath, "_dockerignore");
+				const dockerignoreDest = path.join(projectPath, ".dockerignore");
+				if (await fs.pathExists(dockerignoreSource)) {
+					await fs.rename(dockerignoreSource, dockerignoreDest);
+				}
+
+				// Rename _github to .github
+				const githubSource = path.join(projectPath, "_github");
+				const githubDest = path.join(projectPath, ".github");
+				if (await fs.pathExists(githubSource)) {
+					await fs.rename(githubSource, githubDest);
+				}
+
+				// Disable GitHub Action workflow if not enabled
+				if (!enableGitHubAction) {
+					const workflowPath = path.join(
+						projectPath,
+						".github",
+						"workflows",
+						"build-and-push.yml",
+					);
+					if (await fs.pathExists(workflowPath)) {
+						await fs.rename(workflowPath, `${workflowPath}.disabled`);
+					}
+				}
+
 				// Recreate CLAUDE.md symlink (GitHub ZIP doesn't preserve symlinks)
 				const claudeMdPath = path.join(projectPath, "CLAUDE.md");
 				const agentsMdPath = path.join(projectPath, "AGENTS.md");
@@ -203,6 +232,7 @@ export const ProjectCreator: React.FC<ProjectCreatorProps> = ({
 		projectName,
 		newProjectName,
 		conflictResolution,
+		enableGitHubAction,
 		onComplete,
 		onError,
 	]);
