@@ -1,0 +1,10 @@
+node_modules
+.output
+.vinxi
+.env
+.env.*
+!.env.example
+*.log
+.git
+.gitignore
+.DS_Store
