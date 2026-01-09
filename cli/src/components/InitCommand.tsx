@@ -89,7 +89,9 @@ export const InitCommand: React.FC = () => {
 			case "githubAction":
 				return (
 					<GitHubActionSetup
-						onComplete={(enableGitHubAction) => completeStep({ enableGitHubAction })}
+						onComplete={(enableGitHubAction) =>
+							completeStep({ enableGitHubAction })
+						}
 					/>
 				);
 
