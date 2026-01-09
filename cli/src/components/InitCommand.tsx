@@ -33,17 +33,20 @@ export interface ProjectConfig {
 	enableGitHubAction: boolean;
 }
 
-type InitStep =
-	| "organization"
-	| "context"
-	| "projectName"
-	| "githubAction"
-	| "creating"
-	| "dependencies"
-	| "database"
-	| "extension"
-	| "installation"
-	| "completed";
+const STEP_ORDER = [
+	"organization",
+	"context",
+	"projectName",
+	"githubAction",
+	"creating",
+	"dependencies",
+	"database",
+	"extension",
+	"installation",
+	"completed",
+] as const;
+
+type InitStep = (typeof STEP_ORDER)[number];
 
 export const InitCommand: React.FC = () => {
 	const [currentStep, setCurrentStep] = useState<InitStep>("organization");
@@ -54,82 +57,41 @@ export const InitCommand: React.FC = () => {
 	};
 
 	const nextStep = () => {
-		switch (currentStep) {
-			case "organization":
-				setCurrentStep("context");
-				break;
-			case "context":
-				setCurrentStep("projectName");
-				break;
-			case "projectName":
-				setCurrentStep("githubAction");
-				break;
-			case "githubAction":
-				setCurrentStep("creating");
-				break;
-			case "creating":
-				setCurrentStep("dependencies");
-				break;
-			case "dependencies":
-				setCurrentStep("database");
-				break;
-			case "database":
-				setCurrentStep("extension");
-				break;
-			case "extension":
-				setCurrentStep("installation");
-				break;
-			case "installation":
-				setCurrentStep("completed");
-				break;
+		const currentIndex = STEP_ORDER.indexOf(currentStep);
+		const nextIndex = currentIndex + 1;
+		if (nextIndex < STEP_ORDER.length) {
+			setCurrentStep(STEP_ORDER[nextIndex]);
 		}
+	};
+
+	const completeStep = (updates?: Partial<ProjectConfig>) => {
+		if (updates) {
+			updateConfig(updates);
+		}
+		nextStep();
 	};
 
 	const renderCurrentStep = () => {
 		switch (currentStep) {
 			case "organization":
-				return (
-					<OrganizationSelector
-						onSelect={(data) => {
-							updateConfig({
-								selectedCustomerId: data.selectedCustomerId,
-								isContributor: data.isContributor,
-							});
-							nextStep();
-						}}
-					/>
-				);
+				return <OrganizationSelector onSelect={completeStep} />;
 
 			case "context":
-				return (
-					<ContextSelector
-						onSelect={(data) => {
-							updateConfig({
-								extensionContext: data.extensionContext,
-								selectedContextId: data.selectedContextId,
-							});
-							nextStep();
-						}}
-					/>
-				);
+				return <ContextSelector onSelect={completeStep} />;
 
 			case "projectName":
 				return (
 					<ProjectNameInput
-						onSubmit={(projectName) => {
-							updateConfig({ projectName });
-							nextStep();
-						}}
+						onSubmit={(projectName) => completeStep({ projectName })}
 					/>
 				);
 
 			case "githubAction":
 				return (
 					<GitHubActionSetup
-						onComplete={(enableGitHubAction) => {
-							updateConfig({ enableGitHubAction });
-							nextStep();
-						}}
+						onComplete={(enableGitHubAction) =>
+							completeStep({ enableGitHubAction })
+						}
 					/>
 				);
 
@@ -141,11 +103,9 @@ export const InitCommand: React.FC = () => {
 					<ProjectCreator
 						projectName={config.projectName}
 						enableGitHubAction={config.enableGitHubAction}
-						onComplete={(actualFolderName) => {
-							// Update config with the actual folder name used (in case it was renamed)
-							updateConfig({ projectName: actualFolderName });
-							nextStep();
-						}}
+						onComplete={(actualFolderName) =>
+							completeStep({ projectName: actualFolderName })
+						}
 						onError={(error) => {
 							console.error("Project creation failed:", error);
 							process.exit(1);
@@ -160,10 +120,7 @@ export const InitCommand: React.FC = () => {
 				return (
 					<DependencyInstaller
 						projectName={config.projectName}
-						onComplete={(installDeps) => {
-							updateConfig({ installDeps });
-							nextStep();
-						}}
+						onComplete={(installDeps) => completeStep({ installDeps })}
 					/>
 				);
 
@@ -184,10 +141,7 @@ export const InitCommand: React.FC = () => {
 						extensionContext={config.extensionContext}
 						selectedContextId={config.selectedContextId}
 						installDeps={config.installDeps}
-						onComplete={(databaseConfig) => {
-							updateConfig(databaseConfig);
-							nextStep();
-						}}
+						onComplete={completeStep}
 					/>
 				);
 
@@ -204,10 +158,7 @@ export const InitCommand: React.FC = () => {
 						projectName={config.projectName}
 						extensionContext={config.extensionContext}
 						selectedCustomerId={config.selectedCustomerId}
-						onComplete={(extensionConfig) => {
-							updateConfig(extensionConfig);
-							nextStep();
-						}}
+						onComplete={completeStep}
 					/>
 				);
 
@@ -220,10 +171,7 @@ export const InitCommand: React.FC = () => {
 						extensionId={config.extensionId}
 						extensionContext={config.extensionContext}
 						selectedCustomerId={config.selectedCustomerId}
-						onComplete={(installData) => {
-							updateConfig(installData);
-							nextStep();
-						}}
+						onComplete={completeStep}
 					/>
 				);
 

@@ -10,12 +10,16 @@ import { StatusCommand } from "./StatusCommand.js";
 import { WelcomeScreen } from "./WelcomeScreen.js";
 
 interface AppProps {
-	command?: string;
+	args?: string[];
 }
 
-export const App: React.FC<AppProps> = ({ command }) => {
+export const App: React.FC<AppProps> = ({ args = [] }) => {
 	const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 	const [currentScreen, setCurrentScreen] = useState<string>("loading");
+
+	// Check if --help or -h flag is present anywhere in args
+	const hasHelpFlag = args.some((arg) => arg === "--help" || arg === "-h");
+	const command = args[0];
 
 	useEffect(() => {
 		const checkAuth = async () => {
@@ -23,7 +27,8 @@ export const App: React.FC<AppProps> = ({ command }) => {
 			setAuthenticated(isAuth);
 
 			// Determine which screen to show based on command and auth status
-			if (command === "help" || command === "--help" || command === "-h") {
+			// Show help if --help/-h flag is present OR if command is "help"
+			if (hasHelpFlag || command === "help") {
 				setCurrentScreen("help");
 			} else if (command === "auth:login") {
 				setCurrentScreen("login");
@@ -43,7 +48,7 @@ export const App: React.FC<AppProps> = ({ command }) => {
 		};
 
 		checkAuth();
-	}, [command]);
+	}, [command, hasHelpFlag]);
 
 	if (authenticated === null) {
 		return (
