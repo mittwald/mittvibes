@@ -27,24 +27,27 @@ export const LoginCommand: React.FC<LoginCommandProps> = ({ onComplete }) => {
 	const [oauthFlow, setOauthFlow] = useState<OAuthFlowResult | null>(null);
 
 	// Handle user input when showing URL - ONLY for opening browser
-	useInput((input, key) => {
-		if (status !== "showingUrl") {
-			return;
-		}
+	useInput(
+		(input, key) => {
+			if (status !== "showingUrl") {
+				return;
+			}
 
-		if (!key.return && input !== " ") {
-			return;
-		}
+			if (!key.return && input !== " ") {
+				return;
+			}
 
-		if (!oauthFlow) {
-			return;
-		}
+			if (!oauthFlow) {
+				return;
+			}
 
-		// Just open the browser, waitForCompletion is already running
-		oauthFlow.openBrowser().catch((error) => {
-			console.error("Failed to open browser:", error);
-		});
-	});
+			// Just open the browser, waitForCompletion is already running
+			oauthFlow.openBrowser().catch((error) => {
+				console.error("Failed to open browser:", error);
+			});
+		},
+		{ isActive: status === "showingUrl" },
+	);
 
 	useEffect(() => {
 		const checkAuthAndLogin = async () => {
